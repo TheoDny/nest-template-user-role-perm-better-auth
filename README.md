@@ -16,10 +16,26 @@ cp .env.example .env
 docker compose up -d
 pnpm prisma:generate
 pnpm prisma:migrate
+pnpm prisma:seed
 pnpm start:dev
 ```
 
 Mailpit is available at `http://localhost:8025`.
+
+## Seed Data
+
+Run the database seed after migrations:
+
+```bash
+pnpm prisma:seed
+```
+
+The seed is idempotent and creates:
+
+- 3 organizations: `acme-workspace`, `globex-workspace`, and `initech-workspace`.
+- 1 admin user, `admin@example.com`, with the `owner` role in all 3 organizations.
+- 2 member users, `member.one@example.com` and `member.two@example.com`, each assigned to 2 organizations.
+- 1 member user, `member.three@example.com`, assigned to all 3 organizations.
 
 ## Auth
 
@@ -93,6 +109,7 @@ pnpm test:e2e
 pnpm format
 pnpm prisma:generate
 pnpm prisma:migrate
+pnpm prisma:seed
 pnpm prisma:studio
 ```
 
