@@ -1,5 +1,6 @@
 import { Module } from "@nestjs/common"
 import { ConfigModule } from "@nestjs/config"
+import { AuthenticationModule } from "./auth/auth.module"
 import { appConfig } from "./config/app.config"
 import { validateEnv } from "./config/env.validation"
 import { DatabaseModule } from "./database/database.module"
@@ -11,6 +12,7 @@ import { DatabaseModule } from "./database/database.module"
             load: [appConfig],
             validate: validateEnv,
         }),
+        AuthenticationModule,
         DatabaseModule,
     ],
 })
