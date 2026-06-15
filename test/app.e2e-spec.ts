@@ -111,6 +111,20 @@ describe("App e2e", () => {
         })
     })
 
+    it("returns the public API permission catalog", async () => {
+        const response = await request(getHttpServer()).get("/permissions").expect(200)
+
+        expect(response.body.permissions).toEqual(
+            expect.arrayContaining([
+                {
+                    resource: "member",
+                    action: "read",
+                    permission: "member:read",
+                },
+            ]),
+        )
+    })
+
     function getHttpServer(): Parameters<typeof request>[0] {
         return app.getHttpServer() as Parameters<typeof request>[0]
     }

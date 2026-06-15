@@ -11,6 +11,7 @@ import { MailModule } from "./mail/mail.module"
 import { OrganizationInvitationsModule } from "./organizations/invitations/organization-invitations.module"
 import { OrganizationMembersModule } from "./organizations/members/organization-members.module"
 import { OrganizationRolesModule } from "./organizations/roles/organization-roles.module"
+import { PermissionsModule } from "./permissions/permissions.module"
 
 @Module({
     imports: [
@@ -26,6 +27,7 @@ import { OrganizationRolesModule } from "./organizations/roles/organization-role
         OrganizationInvitationsModule,
         OrganizationMembersModule,
         OrganizationRolesModule,
+        PermissionsModule,
     ],
     providers: [
         {
