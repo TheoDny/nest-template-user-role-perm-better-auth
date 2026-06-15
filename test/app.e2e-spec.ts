@@ -39,6 +39,35 @@ jest.mock("@thallesp/nestjs-better-auth", () => {
     const common = jest.requireActual<typeof import("@nestjs/common")>("@nestjs/common")
 
     class AuthService {}
+    ;(AuthService.prototype as AuthService & { api: Record<string, jest.Mock> }).api = {
+        signInEmail: jest.fn(() => {
+            const headers = new Headers() as Headers & { getSetCookie: () => string[] }
+            headers.getSetCookie = () => ["better-auth.session_token=login-token; Path=/; HttpOnly"]
+
+            return {
+                headers,
+                response: {
+                    redirect: false,
+                    token: "login-token",
+                    user: {
+                        id: "user_1",
+                        email: "user@example.com",
+                    },
+                },
+            }
+        }),
+        signOut: jest.fn(() => {
+            const headers = new Headers() as Headers & { getSetCookie: () => string[] }
+            headers.getSetCookie = () => ["better-auth.session_token=; Path=/; Max-Age=0"]
+
+            return {
+                headers,
+                response: {
+                    success: true,
+                },
+            }
+        }),
+    }
 
     class MockBetterAuthModule {
         static forRoot() {
@@ -108,6 +137,42 @@ describe("App e2e", () => {
 
         expect(response.body).toEqual({
             authenticated: false,
+        })
+    })
+
+    it("logs in with email and password", async () => {
+        const response = await request(getHttpServer())
+            .post("/auth/login")
+            .send({
+                email: "user@example.com",
+                password: "password",
+            })
+            .expect(200)
+
+        expect(response.headers["set-cookie"]).toEqual(
+            expect.arrayContaining([expect.stringContaining("better-auth.session_token=login-token")]),
+        )
+        expect(response.body).toEqual({
+            redirect: false,
+            token: "login-token",
+            user: {
+                id: "user_1",
+                email: "user@example.com",
+            },
+        })
+    })
+
+    it("logs out the current session", async () => {
+        const response = await request(getHttpServer())
+            .post("/auth/logout")
+            .set("Cookie", ["better-auth.session_token=login-token"])
+            .expect(200)
+
+        expect(response.headers["set-cookie"]).toEqual(
+            expect.arrayContaining([expect.stringContaining("better-auth.session_token=;")]),
+        )
+        expect(response.body).toEqual({
+            success: true,
         })
     })
 
