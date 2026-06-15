@@ -108,3 +108,4 @@ Current phase tags:
 - `0.5.0-develop`: organization role API
 - `0.6.0-develop`: organization member API
 - `0.7.0-develop`: invitation API and email delivery
+- `0.8.0-develop`: tests and documentation
