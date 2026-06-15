@@ -32,6 +32,7 @@ Better Auth is mounted at:
 The app uses:
 
 - Better Auth Prisma adapter.
+- Prisma 7 configuration through `prisma.config.ts`.
 - Email/password with `requireEmailVerification: false`.
 - Email/password with `autoSignIn: false`.
 - Admin plugin.
@@ -94,6 +95,12 @@ pnpm prisma:generate
 pnpm prisma:migrate
 pnpm prisma:studio
 ```
+
+## Prisma 7
+
+The datasource URL is configured in `prisma.config.ts`, not in `prisma/schema.prisma`.
+
+`PrismaClient` is created with the PostgreSQL driver adapter from `@prisma/adapter-pg`.
 
 ## Git Workflow
 

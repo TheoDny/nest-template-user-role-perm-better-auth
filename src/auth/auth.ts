@@ -1,11 +1,11 @@
-import { PrismaClient } from "@prisma/client"
 import { betterAuth } from "better-auth"
 import { prismaAdapter } from "better-auth/adapters/prisma"
 import { admin, emailOTP, organization } from "better-auth/plugins"
+import { createPrismaClient } from "@app/database/prisma-client.factory"
 import { sendInvitationEmail, sendVerificationOtpEmail } from "@app/mail/mailer"
 import { ac, adminRole, memberRole, ownerRole } from "./permissions"
 
-const prisma = new PrismaClient()
+const prisma = createPrismaClient()
 
 const trustedOrigins = (process.env.BETTER_AUTH_TRUSTED_ORIGINS ?? "")
     .split(",")

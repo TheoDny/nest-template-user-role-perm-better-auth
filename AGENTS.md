@@ -24,6 +24,7 @@ The project is a NestJS API template built around Better Auth, organization-scop
 - Auth: Better Auth
 - Nest auth integration: `@thallesp/nestjs-better-auth`
 - ORM: Prisma
+- Prisma config: `prisma.config.ts`
 - Database: PostgreSQL
 - Email rendering: MJML
 - Email transport: Nodemailer
@@ -696,8 +697,18 @@ Schema:
 prisma/schema.prisma
 ```
 
+Configuration:
+
+```text
+prisma.config.ts
+```
+
 Rules:
 
+- This project uses Prisma 7.
+- The datasource URL must stay in `prisma.config.ts`.
+- Do not add `url = env("DATABASE_URL")` back to `prisma/schema.prisma`.
+- PostgreSQL access must use `@prisma/adapter-pg`.
 - All model IDs use `String @id @default(cuid())`.
 - Keep Better Auth table names mapped with `@@map(...)`.
 - Use direct Prisma writes to Better Auth-owned tables only when Better Auth lacks the required API.
