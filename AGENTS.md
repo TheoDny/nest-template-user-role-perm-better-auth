@@ -37,6 +37,7 @@ The project is a NestJS API template built around Better Auth, organization-scop
 pnpm install
 pnpm prisma:generate
 pnpm prisma:migrate
+pnpm prisma:seed
 pnpm build
 pnpm lint
 pnpm test

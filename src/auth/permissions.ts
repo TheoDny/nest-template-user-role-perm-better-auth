@@ -24,9 +24,9 @@ export const adminRole = ac.newRole({
 })
 
 export const memberRole = ac.newRole({
-    member: ["read"],
-    invitation: ["read"],
-    ac: ["read"],
+    member: [],
+    invitation: [],
+    ac: [],
 })
 
 export type OrganizationPermissionResource = keyof typeof organizationStatements
