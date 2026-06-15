@@ -7,6 +7,7 @@ import { appConfig } from "./config/app.config"
 import { validateEnv } from "./config/env.validation"
 import { DatabaseModule } from "./database/database.module"
 import { HealthModule } from "./health/health.module"
+import { OrganizationRolesModule } from "./organizations/roles/organization-roles.module"
 
 @Module({
     imports: [
@@ -18,6 +19,7 @@ import { HealthModule } from "./health/health.module"
         AuthenticationModule,
         DatabaseModule,
         HealthModule,
+        OrganizationRolesModule,
     ],
     providers: [
         {
