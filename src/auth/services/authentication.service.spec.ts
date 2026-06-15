@@ -1,4 +1,5 @@
 import type { Response } from "express"
+import { InvalidActiveOrganizationSelectionError } from "@app/common/errors"
 import { AuthenticationService } from "./authentication.service"
 
 jest.mock("@thallesp/nestjs-better-auth", () => ({
@@ -102,6 +103,67 @@ describe("AuthenticationService", () => {
             returnHeaders: true,
         })
         expect(append).toHaveBeenCalledWith("Set-Cookie", "better-auth.session_token=; Path=/; Max-Age=0")
+    })
+
+    it("sets the active organization with Better Auth and forwards session cookies", async () => {
+        const responseHeaders = buildHeaders(["better-auth.session_data=updated; Path=/; HttpOnly"])
+        const setActiveOrganization = jest.fn().mockResolvedValue({
+            headers: responseHeaders,
+            response: {
+                id: "org_1",
+                name: "Acme",
+                slug: "acme",
+            },
+        })
+        const authService = {
+            api: {
+                setActiveOrganization,
+            },
+        }
+        const append = jest.fn()
+        const response = buildResponse(append)
+        const service = new AuthenticationService(authService as never)
+
+        await expect(
+            service.setActiveOrganization(
+                {
+                    cookie: "better-auth.session_token=login-token",
+                },
+                response,
+                {
+                    organizationId: "org_1",
+                },
+            ),
+        ).resolves.toEqual({
+            id: "org_1",
+            name: "Acme",
+            slug: "acme",
+        })
+
+        expect(setActiveOrganization).toHaveBeenCalledWith({
+            body: {
+                organizationId: "org_1",
+                organizationSlug: undefined,
+            },
+            headers: expect.any(Headers),
+            returnHeaders: true,
+        })
+        expect(append).toHaveBeenCalledWith("Set-Cookie", "better-auth.session_data=updated; Path=/; HttpOnly")
+    })
+
+    it("rejects an empty active organization payload", async () => {
+        const setActiveOrganization = jest.fn()
+        const authService = {
+            api: {
+                setActiveOrganization,
+            },
+        }
+        const service = new AuthenticationService(authService as never)
+
+        await expect(service.setActiveOrganization({}, buildResponse(jest.fn()), {})).rejects.toBeInstanceOf(
+            InvalidActiveOrganizationSelectionError,
+        )
+        expect(setActiveOrganization).not.toHaveBeenCalled()
     })
 })
 

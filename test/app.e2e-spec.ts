@@ -67,6 +67,19 @@ jest.mock("@thallesp/nestjs-better-auth", () => {
                 },
             }
         }),
+        setActiveOrganization: jest.fn(() => {
+            const headers = new Headers() as Headers & { getSetCookie: () => string[] }
+            headers.getSetCookie = () => ["better-auth.session_data=updated; Path=/; HttpOnly"]
+
+            return {
+                headers,
+                response: {
+                    id: "org_1",
+                    name: "Acme",
+                    slug: "acme",
+                },
+            }
+        }),
     }
 
     class MockBetterAuthModule {
@@ -173,6 +186,25 @@ describe("App e2e", () => {
         )
         expect(response.body).toEqual({
             success: true,
+        })
+    })
+
+    it("sets the active organization", async () => {
+        const response = await request(getHttpServer())
+            .post("/auth/active-organization")
+            .set("Cookie", ["better-auth.session_token=login-token"])
+            .send({
+                organizationId: "org_1",
+            })
+            .expect(200)
+
+        expect(response.headers["set-cookie"]).toEqual(
+            expect.arrayContaining([expect.stringContaining("better-auth.session_data=updated")]),
+        )
+        expect(response.body).toEqual({
+            id: "org_1",
+            name: "Acme",
+            slug: "acme",
         })
     })
 

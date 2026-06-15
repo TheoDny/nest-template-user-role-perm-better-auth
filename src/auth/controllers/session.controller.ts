@@ -5,6 +5,7 @@ import type { Request, Response } from "express"
 import { auth } from "../auth"
 import type { CustomSession } from "../auth.types"
 import { LoginDto } from "../dto/login.dto"
+import { SetActiveOrganizationDto } from "../dto/set-active-organization.dto"
 import { AuthenticationService } from "../services/authentication.service"
 import { SessionService } from "../services/session.service"
 
@@ -28,6 +29,16 @@ export class SessionController {
     @HttpCode(HttpStatus.OK)
     logout(@Req() request: Request, @Res({ passthrough: true }) response: Response) {
         return this.authenticationService.logout(request.headers, response)
+    }
+
+    @Post("active-organization")
+    @HttpCode(HttpStatus.OK)
+    setActiveOrganization(
+        @Req() request: Request,
+        @Res({ passthrough: true }) response: Response,
+        @Body() dto: SetActiveOrganizationDto,
+    ) {
+        return this.authenticationService.setActiveOrganization(request.headers, response, dto)
     }
 
     @Get("authenticated")

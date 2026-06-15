@@ -69,6 +69,7 @@ Session:
 ```http
 POST /auth/login
 POST /auth/logout
+POST /auth/active-organization
 GET /auth/authenticated
 GET /auth/session
 ```
@@ -145,3 +146,4 @@ Current phase tags:
 - `0.9.0-develop`: agent documentation
 - `0.10.0-develop`: permissions API
 - `0.11.0-develop`: login and logout API
+- `0.12.0-develop`: active organization session API

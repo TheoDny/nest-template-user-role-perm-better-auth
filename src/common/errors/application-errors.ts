@@ -43,6 +43,12 @@ export class ActiveOrganizationRequiredError extends AppError {
     }
 }
 
+export class InvalidActiveOrganizationSelectionError extends AppError {
+    constructor(message = "An organization id or organization slug is required") {
+        super(message, "INVALID_ACTIVE_ORGANIZATION_SELECTION", HttpStatus.BAD_REQUEST)
+    }
+}
+
 export class BetterAuthOperationError extends AppError {
     constructor(message = "Better Auth operation failed", statusCode = HttpStatus.BAD_REQUEST) {
         super(message, "BETTER_AUTH_OPERATION_FAILED", statusCode)
