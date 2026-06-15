@@ -1,0 +1,30 @@
+services:
+    postgres:
+        image: postgres:16-alpine
+        container_name: nestjs_better_auth_postgres
+        restart: unless-stopped
+        environment:
+            POSTGRES_DB: app
+            POSTGRES_USER: app
+            POSTGRES_PASSWORD: app
+        ports:
+            - "5432:5432"
+        volumes:
+            - postgres_data:/var/lib/postgresql/data
+        healthcheck:
+            test: ["CMD-SHELL", "pg_isready -U app -d app"]
+            interval: 10s
+            timeout: 5s
+            retries: 5
+
+    mailpit:
+        image: axllent/mailpit:latest
+        container_name: nestjs_better_auth_mailpit
+        restart: unless-stopped
+        ports:
+            - "1025:1025"
+            - "8025:8025"
+
+volumes:
+    postgres_data:
+
