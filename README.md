@@ -85,6 +85,7 @@ Organization roles use the active organization from the session:
 
 ```http
 GET /roles
+POST /roles
 PATCH /roles/:roleId
 PATCH /roles/:roleId/permissions
 DELETE /roles/:roleId
@@ -147,3 +148,4 @@ Current phase tags:
 - `0.10.0-develop`: permissions API
 - `0.11.0-develop`: login and logout API
 - `0.12.0-develop`: active organization session API
+- `0.13.0-develop`: organization role creation API

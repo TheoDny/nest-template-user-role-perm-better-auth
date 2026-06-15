@@ -1,8 +1,9 @@
-import { Body, Controller, Delete, Get, Param, Patch, Req } from "@nestjs/common"
+import { Body, Controller, Delete, Get, Param, Patch, Post, Req } from "@nestjs/common"
 import { MemberHasPermission, Session } from "@thallesp/nestjs-better-auth"
 import type { UserSession } from "@thallesp/nestjs-better-auth"
 import type { Request } from "express"
 import { auth } from "@app/auth/auth"
+import { CreateOrganizationRoleDto } from "./dto/create-organization-role.dto"
 import { RoleParamDto } from "./dto/role-param.dto"
 import { UpdateOrganizationRoleNameDto } from "./dto/update-organization-role-name.dto"
 import { UpdateOrganizationRolePermissionsDto } from "./dto/update-organization-role-permissions.dto"
@@ -18,6 +19,16 @@ export class OrganizationRolesController {
     @MemberHasPermission({ permissions: { ac: ["read"] } })
     list(@Req() request: Request, @Session() session: BetterAuthSession) {
         return this.organizationRolesService.list(request.headers, session.session.activeOrganizationId)
+    }
+
+    @Post()
+    @MemberHasPermission({ permissions: { ac: ["create"] } })
+    create(
+        @Req() request: Request,
+        @Session() session: BetterAuthSession,
+        @Body() dto: CreateOrganizationRoleDto,
+    ) {
+        return this.organizationRolesService.create(request.headers, session.session.activeOrganizationId, dto)
     }
 
     @Patch(":roleId")
