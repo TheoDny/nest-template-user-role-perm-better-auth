@@ -2,6 +2,7 @@ import { PrismaClient } from "@prisma/client"
 import { betterAuth } from "better-auth"
 import { prismaAdapter } from "better-auth/adapters/prisma"
 import { admin, emailOTP, organization } from "better-auth/plugins"
+import { sendInvitationEmail, sendVerificationOtpEmail } from "@app/mail/mailer"
 import { ac, adminRole, memberRole, ownerRole } from "./permissions"
 
 const prisma = new PrismaClient()
@@ -37,10 +38,10 @@ export const auth = betterAuth({
                 enabled: true,
             },
             requireEmailVerificationOnInvitation: false,
-            sendInvitationEmail: async () => {},
+            sendInvitationEmail,
         }),
         emailOTP({
-            sendVerificationOTP: async () => {},
+            sendVerificationOTP: sendVerificationOtpEmail,
             sendVerificationOnSignUp: false,
             disableSignUp: true,
             storeOTP: "hashed",
