@@ -110,6 +110,7 @@ Existing phase tags:
 - `0.10.0-develop`: permissions API
 - `0.11.0-develop`: login and logout API
 - `0.12.0-develop`: active organization session API
+- `0.13.0-develop`: organization role creation API
 
 ## Architecture
 
@@ -544,6 +545,35 @@ Uses:
 auth.api.listOrgRoles
 ```
 
+#### `POST /roles`
+
+Permission:
+
+```ts
+@MemberHasPermission({ permissions: { ac: ["create"] } })
+```
+
+DTO:
+
+```ts
+{
+    role: string
+    permissions?: Record<string, string[]>
+}
+```
+
+Uses:
+
+```ts
+auth.api.createOrgRole
+```
+
+Rules:
+
+- The organization ID comes from `session.session.activeOrganizationId`.
+- The service maps the API DTO field `permissions` to Better Auth's `permission` body field.
+- Better Auth enforces that the current member cannot create a role with permissions they do not have.
+
 #### `PATCH /roles/:roleId`
 
 Permission:
@@ -969,6 +999,7 @@ Unit tests currently cover:
 
 - Better Auth login/logout service calls and cookie forwarding
 - Better Auth active organization service calls and cookie forwarding
+- organization role creation
 - custom session building
 - invitation pre-user-creation flow
 - API permission listing and permission checks

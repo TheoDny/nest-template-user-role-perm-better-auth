@@ -5,6 +5,7 @@ import type { IncomingHttpHeaders } from "node:http"
 import { PrismaService } from "@app/database/prisma.service"
 import { ActiveOrganizationRequiredError, ForbiddenActionError } from "@app/common/errors"
 import type { AppAuth } from "@app/auth/auth"
+import type { CreateOrganizationRoleDto } from "./dto/create-organization-role.dto"
 import type { UpdateOrganizationRoleNameDto } from "./dto/update-organization-role-name.dto"
 import type { UpdateOrganizationRolePermissionsDto } from "./dto/update-organization-role-permissions.dto"
 
@@ -21,6 +22,23 @@ export class OrganizationRolesService {
         return this.authService.api.listOrgRoles({
             query: {
                 organizationId,
+            },
+            headers: fromNodeHeaders(headers),
+        })
+    }
+
+    create(
+        headers: IncomingHttpHeaders,
+        activeOrganizationId: string | null | undefined,
+        dto: CreateOrganizationRoleDto,
+    ) {
+        const organizationId = this.requireActiveOrganization(activeOrganizationId)
+
+        return this.authService.api.createOrgRole({
+            body: {
+                organizationId,
+                role: dto.role,
+                permission: dto.permissions ?? {},
             },
             headers: fromNodeHeaders(headers),
         })
