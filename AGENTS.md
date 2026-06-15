@@ -109,6 +109,7 @@ Existing phase tags:
 - `0.9.0-develop`: agent documentation
 - `0.10.0-develop`: permissions API
 - `0.11.0-develop`: login and logout API
+- `0.12.0-develop`: active organization session API
 
 ## Architecture
 
@@ -351,6 +352,35 @@ Rules:
 
 - Forward request headers with `fromNodeHeaders(request.headers)`.
 - Keep `returnHeaders: true` so Better Auth cleanup cookies are forwarded to the client.
+
+#### `POST /auth/active-organization`
+
+Protected by the global auth guard.
+
+Body:
+
+```ts
+{
+    organizationId?: string | null
+    organizationSlug?: string
+}
+```
+
+Calls:
+
+```text
+auth.api.setActiveOrganization
+```
+
+Rules:
+
+- Use `organizationId` when the client has the organization ID.
+- Use `organizationSlug` when the client only has the slug.
+- Send `organizationId: null` to unset the active organization.
+- An empty body is rejected with `InvalidActiveOrganizationSelectionError`.
+- Forward request headers with `fromNodeHeaders(request.headers)`.
+- Keep `returnHeaders: true` so Better Auth session cookies are forwarded to the client.
+- The controller delegates to `AuthenticationService` and uses `SetActiveOrganizationDto`.
 
 #### `GET /auth/authenticated`
 
@@ -938,6 +968,7 @@ Every path parameter route should use a params DTO.
 Unit tests currently cover:
 
 - Better Auth login/logout service calls and cookie forwarding
+- Better Auth active organization service calls and cookie forwarding
 - custom session building
 - invitation pre-user-creation flow
 - API permission listing and permission checks
@@ -948,6 +979,7 @@ E2E smoke tests currently cover:
 - `GET /status`
 - `POST /auth/login`
 - `POST /auth/logout`
+- `POST /auth/active-organization`
 - anonymous `GET /auth/authenticated`
 - public `GET /permissions`
 

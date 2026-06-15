@@ -3,8 +3,10 @@ import { AuthService } from "@thallesp/nestjs-better-auth"
 import { fromNodeHeaders } from "better-auth/node"
 import type { Response } from "express"
 import type { IncomingHttpHeaders } from "node:http"
+import { InvalidActiveOrganizationSelectionError } from "@app/common/errors"
 import type { AppAuth } from "../auth"
 import type { LoginDto } from "../dto/login.dto"
+import type { SetActiveOrganizationDto } from "../dto/set-active-organization.dto"
 
 type HeadersWithSetCookie = Headers & {
     getSetCookie?: () => string[]
@@ -40,6 +42,33 @@ export class AuthenticationService {
         this.applySetCookieHeaders(response, result.headers)
 
         return result.response
+    }
+
+    async setActiveOrganization(headers: IncomingHttpHeaders, response: Response, dto: SetActiveOrganizationDto) {
+        this.ensureActiveOrganizationPayload(dto)
+
+        const result = await this.authService.api.setActiveOrganization({
+            body: {
+                organizationId: dto.organizationId,
+                organizationSlug: dto.organizationSlug,
+            },
+            headers: fromNodeHeaders(headers),
+            returnHeaders: true,
+        })
+
+        this.applySetCookieHeaders(response, result.headers)
+
+        return result.response
+    }
+
+    private ensureActiveOrganizationPayload(dto: SetActiveOrganizationDto): void {
+        const hasOrganizationId = Object.prototype.hasOwnProperty.call(dto, "organizationId")
+        const hasOrganizationSlug =
+            typeof dto.organizationSlug === "string" && dto.organizationSlug.trim().length > 0
+
+        if (!hasOrganizationId && !hasOrganizationSlug) {
+            throw new InvalidActiveOrganizationSelectionError()
+        }
     }
 
     private applySetCookieHeaders(response: Response, headers: HeadersWithSetCookie): void {
