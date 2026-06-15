@@ -106,6 +106,9 @@ Existing phase tags:
 - `0.6.0-develop`: organization member API
 - `0.7.0-develop`: invitation API and email delivery
 - `0.8.0-develop`: tests and documentation
+- `0.9.0-develop`: agent documentation
+- `0.10.0-develop`: permissions API
+- `0.11.0-develop`: login and logout API
 
 ## Architecture
 
@@ -283,6 +286,71 @@ src/health/health.controller.ts
 ```
 
 ### Session
+
+#### `POST /auth/login`
+
+Decorator:
+
+```ts
+@AllowAnonymous()
+```
+
+Body:
+
+```ts
+{
+    email: string
+    password: string
+    rememberMe?: boolean
+    callbackURL?: string
+}
+```
+
+Calls:
+
+```text
+auth.api.signInEmail
+```
+
+Returns the Better Auth email/password sign-in response and forwards Better Auth `Set-Cookie` headers to the Nest response.
+
+Implementation:
+
+```text
+src/auth/controllers/session.controller.ts
+src/auth/dto/login.dto.ts
+src/auth/services/authentication.service.ts
+```
+
+Rules:
+
+- The route is public because it creates the user session.
+- The controller must stay thin and delegate Better Auth calls to `AuthenticationService`.
+- The DTO validates email, password, optional `rememberMe`, and optional `callbackURL`.
+- Keep `returnHeaders: true` so Better Auth session cookies are forwarded to the client.
+
+#### `POST /auth/logout`
+
+Protected by the global auth guard.
+
+Calls:
+
+```text
+auth.api.signOut
+```
+
+Returns:
+
+```json
+{
+    "success": true
+}
+```
+
+Rules:
+
+- Forward request headers with `fromNodeHeaders(request.headers)`.
+- Keep `returnHeaders: true` so Better Auth cleanup cookies are forwarded to the client.
 
 #### `GET /auth/authenticated`
 
@@ -869,13 +937,17 @@ Every path parameter route should use a params DTO.
 
 Unit tests currently cover:
 
+- Better Auth login/logout service calls and cookie forwarding
 - custom session building
 - invitation pre-user-creation flow
+- API permission listing and permission checks
 - global exception formatting
 
 E2E smoke tests currently cover:
 
 - `GET /status`
+- `POST /auth/login`
+- `POST /auth/logout`
 - anonymous `GET /auth/authenticated`
 - public `GET /permissions`
 

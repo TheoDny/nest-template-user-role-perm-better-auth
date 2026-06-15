@@ -2,6 +2,7 @@ import { Module } from "@nestjs/common"
 import { AuthModule as BetterAuthModule } from "@thallesp/nestjs-better-auth"
 import { auth } from "./auth"
 import { SessionController } from "./controllers/session.controller"
+import { AuthenticationService } from "./services/authentication.service"
 import { SessionService } from "./services/session.service"
 
 @Module({
@@ -20,7 +21,7 @@ import { SessionService } from "./services/session.service"
         }),
     ],
     controllers: [SessionController],
-    providers: [SessionService],
+    providers: [AuthenticationService, SessionService],
     exports: [SessionService],
 })
 export class AuthenticationModule {}

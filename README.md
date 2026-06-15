@@ -67,6 +67,8 @@ GET /organizations/:organizationId/invitations/:invitationId
 Session:
 
 ```http
+POST /auth/login
+POST /auth/logout
 GET /auth/authenticated
 GET /auth/session
 ```
@@ -140,3 +142,6 @@ Current phase tags:
 - `0.6.0-develop`: organization member API
 - `0.7.0-develop`: invitation API and email delivery
 - `0.8.0-develop`: tests and documentation
+- `0.9.0-develop`: agent documentation
+- `0.10.0-develop`: permissions API
+- `0.11.0-develop`: login and logout API
