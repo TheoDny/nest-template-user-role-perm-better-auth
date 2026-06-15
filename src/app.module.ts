@@ -7,6 +7,8 @@ import { appConfig } from "./config/app.config"
 import { validateEnv } from "./config/env.validation"
 import { DatabaseModule } from "./database/database.module"
 import { HealthModule } from "./health/health.module"
+import { MailModule } from "./mail/mail.module"
+import { OrganizationInvitationsModule } from "./organizations/invitations/organization-invitations.module"
 import { OrganizationMembersModule } from "./organizations/members/organization-members.module"
 import { OrganizationRolesModule } from "./organizations/roles/organization-roles.module"
 
@@ -20,6 +22,8 @@ import { OrganizationRolesModule } from "./organizations/roles/organization-role
         AuthenticationModule,
         DatabaseModule,
         HealthModule,
+        MailModule,
+        OrganizationInvitationsModule,
         OrganizationMembersModule,
         OrganizationRolesModule,
     ],
