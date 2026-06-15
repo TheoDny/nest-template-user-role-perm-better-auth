@@ -167,6 +167,8 @@ src/
       dto/
     roles/
       dto/
+  permissions/
+    dto/
 test/
 prisma/
 ```
@@ -329,6 +331,86 @@ Rules:
 - `roles` come from the current user's membership in the active organization.
 - `organizations` lists all organizations available to the current user.
 - If no active organization exists, `permissions` and `roles` are empty.
+
+### API Permissions
+
+Base path:
+
+```http
+/permissions
+```
+
+Implementation:
+
+```text
+src/permissions/
+```
+
+#### `GET /permissions`
+
+Decorator:
+
+```ts
+@AllowAnonymous()
+```
+
+Returns the permission catalog used by the API.
+
+Response shape:
+
+```ts
+{
+    permissions: {
+        resource: string
+        action: string
+        permission: string
+    }
+    ;[]
+    resources: Record<string, readonly string[]>
+}
+```
+
+Permission strings use the `resource:action` format, for example:
+
+```text
+member:read
+invitation:create
+ac:update
+```
+
+#### `POST /permissions/check`
+
+Protected by the global auth guard.
+
+DTO:
+
+```ts
+{
+    permissions: string[]
+}
+```
+
+Input permissions must use the `resource:action` format.
+
+Returns:
+
+```ts
+{
+    authorized: boolean
+    permissions: {
+        permission: string
+        granted: boolean
+    }[]
+    missingPermissions: string[]
+}
+```
+
+Rules:
+
+- The current user is taken from the Better Auth session.
+- The organization scope comes from `session.session.activeOrganizationId`.
+- Permission computation reuses `SessionService.findCurrentPermissions`.
+- If there is no active organization, every requested permission is denied.
 
 ### Organization Roles
 
@@ -795,6 +877,7 @@ E2E smoke tests currently cover:
 
 - `GET /status`
 - anonymous `GET /auth/authenticated`
+- public `GET /permissions`
 
 Run:
 

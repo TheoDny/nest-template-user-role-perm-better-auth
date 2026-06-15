@@ -21,21 +21,33 @@ export class SessionService {
 
     async buildCustomSession(session: BetterAuthSession): Promise<CustomSession> {
         const userId = session.user.id
-        const activeOrganizationId = session.session.activeOrganizationId ?? null
         const organizations = await this.findUserOrganizations(userId)
-        const roles = activeOrganizationId
-            ? await this.findActiveOrganizationRoles(userId, activeOrganizationId)
-            : []
-        const permissions = activeOrganizationId
-            ? await this.findUniquePermissions(activeOrganizationId, roles)
-            : []
+        const permissionsContext = await this.findCurrentPermissions(session)
 
         return {
             user: this.toCorrectUser(session.user),
             session: this.toCorrectSession(session.session),
-            permissions,
-            roles,
+            permissions: permissionsContext.permissions,
+            roles: permissionsContext.roles,
             organizations,
+        }
+    }
+
+    async findCurrentPermissions(session: BetterAuthSession): Promise<{ permissions: string[]; roles: string[] }> {
+        const activeOrganizationId = session.session.activeOrganizationId ?? null
+
+        if (!activeOrganizationId) {
+            return {
+                permissions: [],
+                roles: [],
+            }
+        }
+
+        const roles = await this.findActiveOrganizationRoles(session.user.id, activeOrganizationId)
+
+        return {
+            permissions: await this.findUniquePermissions(activeOrganizationId, roles),
+            roles,
         }
     }
 

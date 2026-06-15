@@ -71,6 +71,13 @@ GET /auth/authenticated
 GET /auth/session
 ```
 
+Permissions:
+
+```http
+GET /permissions
+POST /permissions/check
+```
+
 Organization roles use the active organization from the session:
 
 ```http

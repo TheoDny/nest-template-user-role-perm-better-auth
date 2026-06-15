@@ -21,5 +21,6 @@ import { SessionService } from "./services/session.service"
     ],
     controllers: [SessionController],
     providers: [SessionService],
+    exports: [SessionService],
 })
 export class AuthenticationModule {}
