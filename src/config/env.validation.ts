@@ -1,4 +1,4 @@
-import { plainToInstance } from "class-transformer"
+import { plainToInstance, Type } from "class-transformer"
 import { IsIn, IsInt, IsNotEmpty, IsOptional, IsString, IsUrl, Min, validateSync } from "class-validator"
 
 class EnvironmentVariables {
@@ -7,6 +7,7 @@ class EnvironmentVariables {
 
     @IsInt()
     @Min(1)
+    @Type(() => Number)
     PORT = 3000
 
     @IsString()
@@ -37,6 +38,7 @@ class EnvironmentVariables {
 
     @IsInt()
     @Min(1)
+    @Type(() => Number)
     SMTP_PORT = 1025
 
     @IsString()
