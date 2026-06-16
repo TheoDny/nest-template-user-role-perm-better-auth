@@ -5,7 +5,10 @@ import type { Request, Response } from "express"
 import { auth } from "../auth"
 import type { CustomSession } from "../auth.types"
 import { LoginDto } from "../dto/login.dto"
+import { RequestPasswordResetEmailOtpDto } from "../dto/request-password-reset-email-otp.dto"
+import { SendEmailOtpDto } from "../dto/send-email-otp.dto"
 import { SetActiveOrganizationDto } from "../dto/set-active-organization.dto"
+import { SignInEmailOtpDto } from "../dto/sign-in-email-otp.dto"
 import { AuthenticationService } from "../services/authentication.service"
 import { SessionService } from "../services/session.service"
 
@@ -29,6 +32,31 @@ export class SessionController {
     @HttpCode(HttpStatus.OK)
     logout(@Req() request: Request, @Res({ passthrough: true }) response: Response) {
         return this.authenticationService.logout(request.headers, response)
+    }
+
+    @Post("email-otp/send")
+    @AllowAnonymous()
+    @HttpCode(HttpStatus.OK)
+    sendEmailOtp(@Body() dto: SendEmailOtpDto) {
+        return this.authenticationService.sendEmailOtp(dto)
+    }
+
+    @Post("email-otp/sign-in")
+    @AllowAnonymous()
+    @HttpCode(HttpStatus.OK)
+    signInEmailOtp(
+        @Req() request: Request,
+        @Res({ passthrough: true }) response: Response,
+        @Body() dto: SignInEmailOtpDto,
+    ) {
+        return this.authenticationService.signInEmailOtp(request.headers, response, dto)
+    }
+
+    @Post("password-reset/email-otp")
+    @AllowAnonymous()
+    @HttpCode(HttpStatus.OK)
+    requestPasswordResetEmailOtp(@Body() dto: RequestPasswordResetEmailOtpDto) {
+        return this.authenticationService.requestPasswordResetEmailOtp(dto)
     }
 
     @Post("active-organization")

@@ -6,7 +6,10 @@ import type { IncomingHttpHeaders } from "node:http"
 import { InvalidActiveOrganizationSelectionError } from "@app/common/errors"
 import type { AppAuth } from "../auth"
 import type { LoginDto } from "../dto/login.dto"
+import type { RequestPasswordResetEmailOtpDto } from "../dto/request-password-reset-email-otp.dto"
+import type { SendEmailOtpDto } from "../dto/send-email-otp.dto"
 import type { SetActiveOrganizationDto } from "../dto/set-active-organization.dto"
+import type { SignInEmailOtpDto } from "../dto/sign-in-email-otp.dto"
 
 type HeadersWithSetCookie = Headers & {
     getSetCookie?: () => string[]
@@ -42,6 +45,40 @@ export class AuthenticationService {
         this.applySetCookieHeaders(response, result.headers)
 
         return result.response
+    }
+
+    sendEmailOtp(dto: SendEmailOtpDto) {
+        return this.authService.api.sendVerificationOTP({
+            body: {
+                email: dto.email,
+                type: dto.type,
+            },
+        })
+    }
+
+    async signInEmailOtp(headers: IncomingHttpHeaders, response: Response, dto: SignInEmailOtpDto) {
+        const result = await this.authService.api.signInEmailOTP({
+            body: {
+                email: dto.email,
+                otp: dto.otp,
+                name: dto.name,
+                image: dto.image,
+            },
+            headers: fromNodeHeaders(headers),
+            returnHeaders: true,
+        })
+
+        this.applySetCookieHeaders(response, result.headers)
+
+        return result.response
+    }
+
+    requestPasswordResetEmailOtp(dto: RequestPasswordResetEmailOtpDto) {
+        return this.authService.api.requestPasswordResetEmailOTP({
+            body: {
+                email: dto.email,
+            },
+        })
     }
 
     async setActiveOrganization(headers: IncomingHttpHeaders, response: Response, dto: SetActiveOrganizationDto) {
