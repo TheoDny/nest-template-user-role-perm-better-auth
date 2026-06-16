@@ -5,15 +5,15 @@ const prisma = createPrismaClient()
 const seedOrganizations = [
     {
         name: "Orga 1",
-        slug: "orga-1",
+        slug: "org-1",
     },
     {
         name: "Orga 2",
-        slug: "orga-2",
+        slug: "org-2",
     },
     {
         name: "Orga 3",
-        slug: "orga-3",
+        slug: "org-3",
     },
 ] as const
 
@@ -39,22 +39,22 @@ const seedUsers = [
 const seedMemberships = [
     {
         userEmail: "admin@example.com",
-        organizationSlugs: ["acme-workspace", "globex-workspace", "initech-workspace"],
+        organizationSlugs: ["org-1", "org-2", "org-3"],
         role: "owner",
     },
     {
         userEmail: "member.one@example.com",
-        organizationSlugs: ["acme-workspace", "globex-workspace"],
+        organizationSlugs: ["org-1", "org-2"],
         role: "member",
     },
     {
         userEmail: "member.two@example.com",
-        organizationSlugs: ["globex-workspace", "initech-workspace"],
+        organizationSlugs: ["org-2", "org-3"],
         role: "member",
     },
     {
         userEmail: "member.three@example.com",
-        organizationSlugs: ["acme-workspace", "globex-workspace", "initech-workspace"],
+        organizationSlugs: ["org-1", "org-2", "org-3"],
         role: "member",
     },
 ] as const
@@ -64,6 +64,7 @@ async function main(): Promise<void> {
     const organizationsBySlug = new Map<string, string>()
 
     for (const user of seedUsers) {
+        console.log(`Seeding user: ${user.email}`)
         const seededUser = await prisma.user.upsert({
             where: {
                 email: user.email,
@@ -87,6 +88,7 @@ async function main(): Promise<void> {
     }
 
     for (const organization of seedOrganizations) {
+        console.log(`Seeding organization: ${organization.slug}`)
         const seededOrganization = await prisma.organization.upsert({
             where: {
                 slug: organization.slug,
@@ -105,6 +107,9 @@ async function main(): Promise<void> {
     }
 
     for (const membership of seedMemberships) {
+        console.log(
+            `Seeding membership: ${membership.userEmail} for organizations: ${membership.organizationSlugs.join(", ")}`,
+        )
         const userId = usersByEmail.get(membership.userEmail)
 
         if (!userId) {
