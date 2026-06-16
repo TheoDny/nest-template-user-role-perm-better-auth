@@ -49,6 +49,12 @@ export class InvalidActiveOrganizationSelectionError extends AppError {
     }
 }
 
+export class UserOrganizationRequiredError extends AppError {
+    constructor(message = "A user must belong to at least one organization to sign in") {
+        super(message, "USER_ORGANIZATION_REQUIRED", HttpStatus.FORBIDDEN)
+    }
+}
+
 export class BetterAuthOperationError extends AppError {
     constructor(message = "Better Auth operation failed", statusCode = HttpStatus.BAD_REQUEST) {
         super(message, "BETTER_AUTH_OPERATION_FAILED", statusCode)

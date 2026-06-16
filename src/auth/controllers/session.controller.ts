@@ -1,6 +1,6 @@
 import { Body, Controller, Get, HttpCode, HttpStatus, Post, Req, Res } from "@nestjs/common"
-import { AllowAnonymous, OptionalAuth, Session } from "@thallesp/nestjs-better-auth"
 import type { UserSession } from "@thallesp/nestjs-better-auth"
+import { AllowAnonymous, OptionalAuth, Session } from "@thallesp/nestjs-better-auth"
 import type { Request, Response } from "express"
 import { auth } from "../auth"
 import type { CustomSession } from "../auth.types"
@@ -30,8 +30,8 @@ export class SessionController {
 
     @Post("logout")
     @HttpCode(HttpStatus.OK)
-    logout(@Req() request: Request, @Res({ passthrough: true }) response: Response) {
-        return this.authenticationService.logout(request.headers, response)
+    logout(@Req() request: Request) {
+        return this.authenticationService.logout(request.headers)
     }
 
     @Post("email-otp/send")

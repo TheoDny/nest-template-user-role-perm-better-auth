@@ -1,9 +1,10 @@
+import { InvalidActiveOrganizationSelectionError, UserOrganizationRequiredError } from "@app/common/errors"
+import { PrismaService } from "@app/database/prisma.service"
 import { Injectable } from "@nestjs/common"
 import { AuthService } from "@thallesp/nestjs-better-auth"
 import { fromNodeHeaders } from "better-auth/node"
 import type { Response } from "express"
 import type { IncomingHttpHeaders } from "node:http"
-import { InvalidActiveOrganizationSelectionError } from "@app/common/errors"
 import type { AppAuth } from "../auth"
 import type { LoginDto } from "../dto/login.dto"
 import type { RequestPasswordResetEmailOtpDto } from "../dto/request-password-reset-email-otp.dto"
@@ -17,7 +18,10 @@ type HeadersWithSetCookie = Headers & {
 
 @Injectable()
 export class AuthenticationService {
-    constructor(private readonly authService: AuthService<AppAuth>) {}
+    constructor(
+        private readonly authService: AuthService<AppAuth>,
+        private readonly prisma: PrismaService,
+    ) {}
 
     async login(headers: IncomingHttpHeaders, response: Response, dto: LoginDto) {
         const result = await this.authService.api.signInEmail({
@@ -31,18 +35,17 @@ export class AuthenticationService {
             returnHeaders: true,
         })
 
+        await this.ensureSignedInUserHasActiveOrganization(result.response.user.id, result.response.token)
         this.applySetCookieHeaders(response, result.headers)
 
         return result.response
     }
 
-    async logout(headers: IncomingHttpHeaders, response: Response) {
+    async logout(headers: IncomingHttpHeaders) {
         const result = await this.authService.api.signOut({
             headers: fromNodeHeaders(headers),
             returnHeaders: true,
         })
-
-        this.applySetCookieHeaders(response, result.headers)
 
         return result.response
     }
@@ -96,6 +99,34 @@ export class AuthenticationService {
         this.applySetCookieHeaders(response, result.headers)
 
         return result.response
+    }
+
+    private async ensureSignedInUserHasActiveOrganization(userId: string, sessionToken: string): Promise<void> {
+        const membership = await this.prisma.member.findFirst({
+            where: {
+                userId,
+            },
+            select: {
+                organizationId: true,
+            },
+            orderBy: {
+                createdAt: "asc",
+            },
+        })
+
+        if (!membership) {
+            throw new UserOrganizationRequiredError()
+        }
+
+        await this.prisma.session.updateMany({
+            where: {
+                token: sessionToken,
+                activeOrganizationId: null,
+            },
+            data: {
+                activeOrganizationId: membership.organizationId,
+            },
+        })
     }
 
     private ensureActiveOrganizationPayload(dto: SetActiveOrganizationDto): void {

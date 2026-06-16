@@ -2,12 +2,14 @@ import { Injectable } from "@nestjs/common"
 import type { Prisma } from "@prisma/client"
 import type { UserSession } from "@thallesp/nestjs-better-auth"
 import { PrismaService } from "@app/database/prisma.service"
+import { UserOrganizationRequiredError } from "@app/common/errors"
 import { adminRole, memberRole, ownerRole, organizationStatements } from "../permissions"
 import type { AppAuth } from "../auth"
 import type { CorrectSession, CorrectUser, CustomSession } from "../auth.types"
 
 type BetterAuthSession = UserSession<AppAuth>
 type PermissionRecord = Record<string, readonly string[]>
+type CurrentPermissionsContext = { permissions: string[]; roles: string[]; activeOrganizationId: string | null }
 
 const staticRolePermissions: Record<string, PermissionRecord> = {
     owner: ownerRole.statements,
@@ -26,29 +28,58 @@ export class SessionService {
 
         return {
             user: this.toCorrectUser(session.user),
-            session: this.toCorrectSession(session.session),
+            session: this.toCorrectSession(session.session, permissionsContext.activeOrganizationId),
             permissions: permissionsContext.permissions,
             roles: permissionsContext.roles,
             organizations,
         }
     }
 
-    async findCurrentPermissions(session: BetterAuthSession): Promise<{ permissions: string[]; roles: string[] }> {
-        const activeOrganizationId = session.session.activeOrganizationId ?? null
-
-        if (!activeOrganizationId) {
-            return {
-                permissions: [],
-                roles: [],
-            }
-        }
+    async findCurrentPermissions(session: BetterAuthSession): Promise<CurrentPermissionsContext> {
+        const activeOrganizationId = await this.ensureActiveOrganization(session)
 
         const roles = await this.findActiveOrganizationRoles(session.user.id, activeOrganizationId)
 
         return {
             permissions: await this.findUniquePermissions(activeOrganizationId, roles),
             roles,
+            activeOrganizationId,
         }
+    }
+
+    private async ensureActiveOrganization(session: BetterAuthSession): Promise<string> {
+        const activeOrganizationId = session.session.activeOrganizationId ?? null
+
+        if (activeOrganizationId) {
+            return activeOrganizationId
+        }
+
+        const membership = await this.prisma.member.findFirst({
+            where: {
+                userId: session.user.id,
+            },
+            select: {
+                organizationId: true,
+            },
+            orderBy: {
+                createdAt: "asc",
+            },
+        })
+
+        if (!membership) {
+            throw new UserOrganizationRequiredError()
+        }
+
+        await this.prisma.session.update({
+            where: {
+                id: session.session.id,
+            },
+            data: {
+                activeOrganizationId: membership.organizationId,
+            },
+        })
+
+        return membership.organizationId
     }
 
     private async findUserOrganizations(userId: string): Promise<{ id: string; name: string }[]> {
@@ -164,7 +195,10 @@ export class SessionService {
         }
     }
 
-    private toCorrectSession(session: BetterAuthSession["session"]): CorrectSession {
+    private toCorrectSession(
+        session: BetterAuthSession["session"],
+        activeOrganizationIdOverride?: string | null,
+    ): CorrectSession {
         const sessionWithPluginFields = session as BetterAuthSession["session"] & {
             activeOrganizationId?: string | null
             impersonatedBy?: string | null
@@ -179,7 +213,7 @@ export class SessionService {
             token: session.token,
             ipAddress: session.ipAddress ?? null,
             userAgent: session.userAgent ?? null,
-            activeOrganizationId: sessionWithPluginFields.activeOrganizationId ?? null,
+            activeOrganizationId: activeOrganizationIdOverride ?? sessionWithPluginFields.activeOrganizationId ?? null,
             impersonatedBy: sessionWithPluginFields.impersonatedBy ?? null,
         }
     }
