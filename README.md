@@ -69,6 +69,9 @@ Session:
 ```http
 POST /auth/login
 POST /auth/logout
+POST /auth/email-otp/send
+POST /auth/email-otp/sign-in
+POST /auth/password-reset/email-otp
 POST /auth/active-organization
 GET /auth/authenticated
 GET /auth/session
@@ -149,3 +152,4 @@ Current phase tags:
 - `0.11.0-develop`: login and logout API
 - `0.12.0-develop`: active organization session API
 - `0.13.0-develop`: organization role creation API
+- `0.14.0-develop`: email OTP authentication API

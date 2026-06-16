@@ -67,6 +67,27 @@ jest.mock("@thallesp/nestjs-better-auth", () => {
                 },
             }
         }),
+        sendVerificationOTP: jest.fn(() => ({
+            success: true,
+        })),
+        signInEmailOTP: jest.fn(() => {
+            const headers = new Headers() as Headers & { getSetCookie: () => string[] }
+            headers.getSetCookie = () => ["better-auth.session_token=otp-token; Path=/; HttpOnly"]
+
+            return {
+                headers,
+                response: {
+                    token: "otp-token",
+                    user: {
+                        id: "user_1",
+                        email: "user@example.com",
+                    },
+                },
+            }
+        }),
+        requestPasswordResetEmailOTP: jest.fn(() => ({
+            success: true,
+        })),
         setActiveOrganization: jest.fn(() => {
             const headers = new Headers() as Headers & { getSetCookie: () => string[] }
             headers.getSetCookie = () => ["better-auth.session_data=updated; Path=/; HttpOnly"]
@@ -184,6 +205,54 @@ describe("App e2e", () => {
         expect(response.headers["set-cookie"]).toEqual(
             expect.arrayContaining([expect.stringContaining("better-auth.session_token=;")]),
         )
+        expect(response.body).toEqual({
+            success: true,
+        })
+    })
+
+    it("sends an email OTP", async () => {
+        const response = await request(getHttpServer())
+            .post("/auth/email-otp/send")
+            .send({
+                email: "user@example.com",
+                type: "sign-in",
+            })
+            .expect(200)
+
+        expect(response.body).toEqual({
+            success: true,
+        })
+    })
+
+    it("signs in with an email OTP", async () => {
+        const response = await request(getHttpServer())
+            .post("/auth/email-otp/sign-in")
+            .send({
+                email: "user@example.com",
+                otp: "123456",
+            })
+            .expect(200)
+
+        expect(response.headers["set-cookie"]).toEqual(
+            expect.arrayContaining([expect.stringContaining("better-auth.session_token=otp-token")]),
+        )
+        expect(response.body).toEqual({
+            token: "otp-token",
+            user: {
+                id: "user_1",
+                email: "user@example.com",
+            },
+        })
+    })
+
+    it("requests a password reset email OTP", async () => {
+        const response = await request(getHttpServer())
+            .post("/auth/password-reset/email-otp")
+            .send({
+                email: "user@example.com",
+            })
+            .expect(200)
+
         expect(response.body).toEqual({
             success: true,
         })

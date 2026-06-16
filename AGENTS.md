@@ -111,6 +111,7 @@ Existing phase tags:
 - `0.11.0-develop`: login and logout API
 - `0.12.0-develop`: active organization session API
 - `0.13.0-develop`: organization role creation API
+- `0.14.0-develop`: email OTP authentication API
 
 ## Architecture
 
@@ -353,6 +354,90 @@ Rules:
 
 - Forward request headers with `fromNodeHeaders(request.headers)`.
 - Keep `returnHeaders: true` so Better Auth cleanup cookies are forwarded to the client.
+
+#### `POST /auth/email-otp/send`
+
+Decorator:
+
+```ts
+@AllowAnonymous()
+```
+
+Body:
+
+```ts
+{
+    email: string
+    type: "sign-in" | "change-email" | "email-verification" | "forget-password"
+}
+```
+
+Calls:
+
+```text
+auth.api.sendVerificationOTP
+```
+
+Rules:
+
+- Use `type: "sign-in"` before `POST /auth/email-otp/sign-in`.
+- Use Better Auth's email OTP plugin so MJML/Nodemailer delivery remains centralized in the existing mailer.
+
+#### `POST /auth/email-otp/sign-in`
+
+Decorator:
+
+```ts
+@AllowAnonymous()
+```
+
+Body:
+
+```ts
+{
+    email: string
+    otp: string
+    name?: string
+    image?: string
+}
+```
+
+Calls:
+
+```text
+auth.api.signInEmailOTP
+```
+
+Rules:
+
+- Forward request headers with `fromNodeHeaders(request.headers)`.
+- Keep `returnHeaders: true` so Better Auth session cookies are forwarded to the client.
+
+#### `POST /auth/password-reset/email-otp`
+
+Decorator:
+
+```ts
+@AllowAnonymous()
+```
+
+Body:
+
+```ts
+{
+    email: string
+}
+```
+
+Calls:
+
+```text
+auth.api.requestPasswordResetEmailOTP
+```
+
+Rules:
+
+- This route requests the reset OTP email; Better Auth handles OTP creation and mail delivery through the configured email OTP plugin.
 
 #### `POST /auth/active-organization`
 
@@ -998,6 +1083,7 @@ Every path parameter route should use a params DTO.
 Unit tests currently cover:
 
 - Better Auth login/logout service calls and cookie forwarding
+- Better Auth email OTP authentication and password reset requests
 - Better Auth active organization service calls and cookie forwarding
 - organization role creation
 - custom session building
@@ -1010,6 +1096,9 @@ E2E smoke tests currently cover:
 - `GET /status`
 - `POST /auth/login`
 - `POST /auth/logout`
+- `POST /auth/email-otp/send`
+- `POST /auth/email-otp/sign-in`
+- `POST /auth/password-reset/email-otp`
 - `POST /auth/active-organization`
 - anonymous `GET /auth/authenticated`
 - public `GET /permissions`
