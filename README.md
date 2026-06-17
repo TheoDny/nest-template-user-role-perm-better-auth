@@ -22,6 +22,8 @@ pnpm start:dev
 
 Mailpit is available at `http://localhost:8025`.
 
+Swagger UI is available at `http://localhost:3000/docs`.
+
 ## Seed Data
 
 Run the database seed after migrations:
@@ -54,6 +56,20 @@ The app uses:
 - Admin plugin.
 - Organization plugin with dynamic access control.
 - Email OTP plugin.
+
+## API Documentation
+
+Interactive OpenAPI documentation is exposed at:
+
+```http
+GET /docs
+```
+
+Protected routes use the Better Auth session cookie security scheme:
+
+```text
+better-auth.session_token
+```
 
 ## Custom Routes
 
