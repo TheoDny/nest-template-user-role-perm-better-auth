@@ -213,7 +213,8 @@ export class SessionService {
             token: session.token,
             ipAddress: session.ipAddress ?? null,
             userAgent: session.userAgent ?? null,
-            activeOrganizationId: activeOrganizationIdOverride ?? sessionWithPluginFields.activeOrganizationId ?? null,
+            activeOrganizationId:
+                activeOrganizationIdOverride ?? sessionWithPluginFields.activeOrganizationId ?? null,
             impersonatedBy: sessionWithPluginFields.impersonatedBy ?? null,
         }
     }
