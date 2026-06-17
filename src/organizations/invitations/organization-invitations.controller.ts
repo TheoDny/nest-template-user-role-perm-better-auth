@@ -1,8 +1,8 @@
-import { Body, Controller, Get, Param, Patch, Post, Req } from "@nestjs/common"
-import { AllowAnonymous, MemberHasPermission, Session } from "@thallesp/nestjs-better-auth"
-import type { UserSession } from "@thallesp/nestjs-better-auth"
-import type { Request } from "express"
 import { auth } from "@app/auth/auth"
+import { Body, Controller, Get, Param, Patch, Post, Req } from "@nestjs/common"
+import type { UserSession } from "@thallesp/nestjs-better-auth"
+import { AllowAnonymous, MemberHasPermission, Session } from "@thallesp/nestjs-better-auth"
+import type { Request } from "express"
 import { CreateInvitationDto } from "./dto/create-invitation.dto"
 import { InvitationParamDto } from "./dto/invitation-param.dto"
 import { PublicInvitationParamDto } from "./dto/public-invitation-param.dto"
@@ -22,6 +22,16 @@ export class OrganizationInvitationsController {
             request.headers,
             session.session.activeOrganizationId,
             dto,
+        )
+    }
+
+    @Post("invitations/:invitationId/resend")
+    @MemberHasPermission({ permissions: { invitation: ["create"] } })
+    resend(@Req() request: Request, @Session() session: BetterAuthSession, @Param() params: InvitationParamDto) {
+        return this.organizationInvitationsService.resend(
+            request.headers,
+            session.session.activeOrganizationId,
+            params.invitationId,
         )
     }
 

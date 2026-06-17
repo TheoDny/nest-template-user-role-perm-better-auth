@@ -1,15 +1,15 @@
-import { Injectable } from "@nestjs/common"
-import { AuthService } from "@thallesp/nestjs-better-auth"
-import { fromNodeHeaders } from "better-auth/node"
-import type { IncomingHttpHeaders } from "node:http"
-import { PrismaService } from "@app/database/prisma.service"
+import type { AppAuth } from "@app/auth/auth"
 import {
     ActiveOrganizationRequiredError,
     InvalidInvitationStateError,
     InvalidRoleAssignmentError,
     ResourceNotFoundError,
 } from "@app/common/errors"
-import type { AppAuth } from "@app/auth/auth"
+import { PrismaService } from "@app/database/prisma.service"
+import { Injectable } from "@nestjs/common"
+import { AuthService } from "@thallesp/nestjs-better-auth"
+import { fromNodeHeaders } from "better-auth/node"
+import type { IncomingHttpHeaders } from "node:http"
 import type { CreateInvitationDto } from "./dto/create-invitation.dto"
 import type { UpdateInvitationRolesDto } from "./dto/update-invitation-roles.dto"
 
@@ -38,6 +38,38 @@ export class OrganizationInvitationsService {
                 email,
                 role: dto.roles,
                 resend: dto.resend,
+            },
+            headers: fromNodeHeaders(headers),
+        })
+    }
+
+    async resend(
+        headers: IncomingHttpHeaders,
+        activeOrganizationId: string | null | undefined,
+        invitationId: string,
+    ) {
+        const organizationId = this.requireActiveOrganization(activeOrganizationId)
+        const invitation = await this.prisma.invitation.findFirst({
+            where: {
+                id: invitationId,
+                organizationId,
+            },
+        })
+
+        if (!invitation) {
+            throw new ResourceNotFoundError("Invitation not found")
+        }
+
+        if (invitation.status !== "pending") {
+            throw new InvalidInvitationStateError("Only pending invitations can be resend")
+        }
+
+        return this.authService.api.createInvitation({
+            body: {
+                organizationId,
+                email: invitation.email,
+                role: invitation.role,
+                resend: true,
             },
             headers: fromNodeHeaders(headers),
         })

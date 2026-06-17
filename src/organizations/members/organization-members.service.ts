@@ -1,8 +1,4 @@
-import { Injectable } from "@nestjs/common"
-import { AuthService } from "@thallesp/nestjs-better-auth"
-import { fromNodeHeaders } from "better-auth/node"
-import type { IncomingHttpHeaders } from "node:http"
-import { PrismaService } from "@app/database/prisma.service"
+import type { AppAuth } from "@app/auth/auth"
 import {
     ActiveOrganizationRequiredError,
     ForbiddenActionError,
@@ -10,7 +6,11 @@ import {
     LastOwnerRemovalError,
     ResourceNotFoundError,
 } from "@app/common/errors"
-import type { AppAuth } from "@app/auth/auth"
+import { PrismaService } from "@app/database/prisma.service"
+import { Injectable } from "@nestjs/common"
+import { AuthService } from "@thallesp/nestjs-better-auth"
+import { fromNodeHeaders } from "better-auth/node"
+import type { IncomingHttpHeaders } from "node:http"
 import type { UpdateMemberRolesDto } from "./dto/update-member-roles.dto"
 
 const staticRoleNames = new Set(["owner", "admin", "member"])
@@ -22,15 +22,16 @@ export class OrganizationMembersService {
         private readonly prisma: PrismaService,
     ) {}
 
-    list(headers: IncomingHttpHeaders, activeOrganizationId: string | null | undefined) {
+    async list(headers: IncomingHttpHeaders, activeOrganizationId: string | null | undefined) {
         const organizationId = this.requireActiveOrganization(activeOrganizationId)
-
-        return this.authService.api.listMembers({
+        const result = await this.authService.api.listMembers({
             query: {
                 organizationId,
             },
             headers: fromNodeHeaders(headers),
         })
+
+        return result.members
     }
 
     async updateRoles(
