@@ -1,5 +1,14 @@
 import { SessionService } from "./session.service"
 import type { PrismaService } from "@app/database/prisma.service"
+import { ForbiddenActionError } from "@app/common/errors"
+
+jest.mock("@thallesp/nestjs-better-auth", () => ({
+    AuthService: class AuthService {},
+}))
+
+jest.mock("better-auth/node", () => ({
+    fromNodeHeaders: jest.fn(() => new Headers()),
+}))
 
 jest.mock("../permissions", () => ({
     organizationStatements: {
@@ -61,7 +70,7 @@ describe("SessionService", () => {
                 ]),
             },
         } as unknown as PrismaService
-        const service = new SessionService(prisma)
+        const service = new SessionService(prisma, buildAuthService() as never)
         const result = await service.buildCustomSession({
             user: {
                 id: "user_1",
@@ -107,7 +116,7 @@ describe("SessionService", () => {
                 findMany: jest.fn(),
             },
         } as unknown as PrismaService
-        const service = new SessionService(prisma)
+        const service = new SessionService(prisma, buildAuthService() as never)
         const result = await service.buildCustomSession({
             user: {
                 id: "user_1",
@@ -138,4 +147,94 @@ describe("SessionService", () => {
         expect(result.session.activeOrganizationId).toBeNull()
         expect(sessionUpdate).not.toHaveBeenCalled()
     })
+
+    it("lists the current user's sessions with Better Auth", async () => {
+        const sessions = [
+            {
+                id: "session_1",
+                token: "current-token",
+                userId: "user_1",
+            },
+        ]
+        const authService = buildAuthService({
+            listSessions: jest.fn().mockResolvedValue(sessions),
+        })
+        const service = new SessionService(buildPrisma(), authService as never)
+
+        await expect(
+            service.listSessions({
+                cookie: "better-auth.session_token=current-token",
+            }),
+        ).resolves.toEqual(sessions)
+
+        expect(authService.api.listSessions).toHaveBeenCalledWith({
+            headers: expect.any(Headers),
+        })
+    })
+
+    it("revokes another current user session with Better Auth", async () => {
+        const authService = buildAuthService({
+            revokeSession: jest.fn().mockResolvedValue({
+                status: true,
+            }),
+        })
+        const service = new SessionService(buildPrisma(), authService as never)
+
+        await expect(
+            service.revokeSession(
+                {
+                    cookie: "better-auth.session_token=current-token",
+                },
+                "current-token",
+                {
+                    token: "other-token",
+                },
+            ),
+        ).resolves.toEqual({
+            status: true,
+        })
+
+        expect(authService.api.revokeSession).toHaveBeenCalledWith({
+            body: {
+                token: "other-token",
+            },
+            headers: expect.any(Headers),
+        })
+    })
+
+    it("rejects revoking the current request session", () => {
+        const authService = buildAuthService({
+            revokeSession: jest.fn(),
+        })
+        const service = new SessionService(buildPrisma(), authService as never)
+
+        expect(() =>
+            service.revokeSession({}, "current-token", {
+                token: "current-token",
+            }),
+        ).toThrow(ForbiddenActionError)
+        expect(authService.api.revokeSession).not.toHaveBeenCalled()
+    })
 })
+
+function buildAuthService(api: Record<string, jest.Mock> = {}): { api: Record<string, jest.Mock> } {
+    return {
+        api,
+    }
+}
+
+function buildPrisma(): PrismaService {
+    return {
+        member: {
+            findFirst: jest.fn(),
+            findMany: jest.fn(),
+            findUnique: jest.fn(),
+        },
+        organizationRole: {
+            findMany: jest.fn(),
+        },
+        session: {
+            update: jest.fn(),
+        },
+    } as unknown as PrismaService
+}

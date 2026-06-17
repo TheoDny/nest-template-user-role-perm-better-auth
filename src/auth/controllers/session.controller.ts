@@ -1,7 +1,11 @@
+import { ErrorResponseDto } from "@app/common/dto/error-response.dto"
+import { StatusResponseDto } from "@app/common/dto/status-response.dto"
+import { SuccessResponseDto } from "@app/common/dto/success-response.dto"
 import { Body, Controller, Get, HttpCode, HttpStatus, Post, Req, Res } from "@nestjs/common"
 import {
     ApiBadRequestResponse,
     ApiCookieAuth,
+    ApiForbiddenResponse,
     ApiOkResponse,
     ApiOperation,
     ApiTags,
@@ -10,8 +14,6 @@ import {
 import type { UserSession } from "@thallesp/nestjs-better-auth"
 import { AllowAnonymous, OptionalAuth, Session } from "@thallesp/nestjs-better-auth"
 import type { Request, Response } from "express"
-import { ErrorResponseDto } from "@app/common/dto/error-response.dto"
-import { SuccessResponseDto } from "@app/common/dto/success-response.dto"
 import { auth } from "../auth"
 import type { CustomSession } from "../auth.types"
 import { AuthenticatedResponseDto } from "../dto/authenticated-response.dto"
@@ -19,9 +21,11 @@ import { BetterAuthSessionResponseDto } from "../dto/better-auth-session-respons
 import { CustomSessionResponseDto } from "../dto/custom-session-response.dto"
 import { LoginDto } from "../dto/login.dto"
 import { RequestPasswordResetEmailOtpDto } from "../dto/request-password-reset-email-otp.dto"
+import { RevokeSessionDto } from "../dto/revoke-session.dto"
 import { SendEmailOtpDto } from "../dto/send-email-otp.dto"
 import { SetActiveOrganizationDto } from "../dto/set-active-organization.dto"
 import { SignInEmailOtpDto } from "../dto/sign-in-email-otp.dto"
+import { UserSessionResponseDto } from "../dto/user-session-response.dto"
 import { AuthenticationService } from "../services/authentication.service"
 import { SessionService } from "../services/session.service"
 
@@ -69,6 +73,50 @@ export class SessionController {
     })
     logout(@Req() request: Request) {
         return this.authenticationService.logout(request.headers)
+    }
+
+    @Get("sessions")
+    @ApiCookieAuth("betterAuthSession")
+    @ApiOperation({
+        summary: "List the current user's active sessions",
+    })
+    @ApiOkResponse({
+        description: "Active Better Auth sessions owned by the current user.",
+        isArray: true,
+        type: UserSessionResponseDto,
+    })
+    @ApiUnauthorizedResponse({
+        description: "A valid Better Auth session is required.",
+        type: ErrorResponseDto,
+    })
+    listSessions(@Req() request: Request) {
+        return this.sessionService.listSessions(request.headers)
+    }
+
+    @Post("sessions/revoke")
+    @HttpCode(HttpStatus.OK)
+    @ApiCookieAuth("betterAuthSession")
+    @ApiOperation({
+        summary: "Revoke one of the current user's other sessions",
+    })
+    @ApiOkResponse({
+        description: "The requested session was revoked.",
+        type: StatusResponseDto,
+    })
+    @ApiBadRequestResponse({
+        description: "The request body is invalid.",
+        type: ErrorResponseDto,
+    })
+    @ApiUnauthorizedResponse({
+        description: "A valid Better Auth session is required.",
+        type: ErrorResponseDto,
+    })
+    @ApiForbiddenResponse({
+        description: "The current request session cannot be revoked through this route.",
+        type: ErrorResponseDto,
+    })
+    revokeSession(@Req() request: Request, @Session() session: BetterAuthSession, @Body() dto: RevokeSessionDto) {
+        return this.sessionService.revokeSession(request.headers, session.session.token, dto)
     }
 
     @Post("email-otp/send")

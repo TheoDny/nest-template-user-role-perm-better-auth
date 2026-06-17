@@ -1,9 +1,14 @@
 import { PrismaService } from "@app/database/prisma.service"
+import { ForbiddenActionError } from "@app/common/errors"
 import { Injectable } from "@nestjs/common"
 import type { Prisma } from "@prisma/client"
+import { AuthService } from "@thallesp/nestjs-better-auth"
 import type { UserSession } from "@thallesp/nestjs-better-auth"
+import { fromNodeHeaders } from "better-auth/node"
+import type { IncomingHttpHeaders } from "node:http"
 import type { AppAuth } from "../auth"
 import type { CorrectSession, CorrectUser, CustomSession } from "../auth.types"
+import type { RevokeSessionDto } from "../dto/revoke-session.dto"
 import { adminRole, memberRole, organizationStatements, ownerRole } from "../permissions"
 
 type BetterAuthSession = UserSession<AppAuth>
@@ -18,7 +23,10 @@ const staticRolePermissions: Record<string, PermissionRecord> = {
 
 @Injectable()
 export class SessionService {
-    constructor(private readonly prisma: PrismaService) {}
+    constructor(
+        private readonly prisma: PrismaService,
+        private readonly authService: AuthService<AppAuth>,
+    ) {}
 
     async buildCustomSession(session: BetterAuthSession): Promise<CustomSession> {
         const userId = session.user.id
@@ -52,6 +60,25 @@ export class SessionService {
             roles,
             activeOrganizationId,
         }
+    }
+
+    listSessions(headers: IncomingHttpHeaders) {
+        return this.authService.api.listSessions({
+            headers: fromNodeHeaders(headers),
+        })
+    }
+
+    revokeSession(headers: IncomingHttpHeaders, currentSessionToken: string, dto: RevokeSessionDto) {
+        if (dto.token === currentSessionToken) {
+            throw new ForbiddenActionError("The current session cannot be revoked through this route")
+        }
+
+        return this.authService.api.revokeSession({
+            body: {
+                token: dto.token,
+            },
+            headers: fromNodeHeaders(headers),
+        })
     }
 
     private async ensureActiveOrganization(session: BetterAuthSession): Promise<string | null> {
