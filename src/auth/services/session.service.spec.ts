@@ -92,4 +92,50 @@ describe("SessionService", () => {
         expect(result.permissions).toContain("invitation:read")
         expect(result.permissions).toContain("ac:read")
     })
+
+    it("builds a custom session without roles or permissions when the user has no organization", async () => {
+        const sessionUpdate = jest.fn()
+        const prisma = {
+            member: {
+                findFirst: jest.fn().mockResolvedValue(null),
+                findMany: jest.fn().mockResolvedValue([]),
+            },
+            session: {
+                update: sessionUpdate,
+            },
+            organizationRole: {
+                findMany: jest.fn(),
+            },
+        } as unknown as PrismaService
+        const service = new SessionService(prisma)
+        const result = await service.buildCustomSession({
+            user: {
+                id: "user_1",
+                name: "Ada",
+                email: "ada@example.com",
+                emailVerified: false,
+                image: null,
+                banned: null,
+                createdAt: new Date("2026-01-01T00:00:00.000Z"),
+                updatedAt: new Date("2026-01-01T00:00:00.000Z"),
+            },
+            session: {
+                id: "session_1",
+                userId: "user_1",
+                token: "token",
+                expiresAt: new Date("2026-01-02T00:00:00.000Z"),
+                createdAt: new Date("2026-01-01T00:00:00.000Z"),
+                updatedAt: new Date("2026-01-01T00:00:00.000Z"),
+                ipAddress: null,
+                userAgent: null,
+                activeOrganizationId: null,
+            },
+        })
+
+        expect(result.organizations).toEqual([])
+        expect(result.roles).toEqual([])
+        expect(result.permissions).toEqual([])
+        expect(result.session.activeOrganizationId).toBeNull()
+        expect(sessionUpdate).not.toHaveBeenCalled()
+    })
 })

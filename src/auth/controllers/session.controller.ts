@@ -2,7 +2,6 @@ import { Body, Controller, Get, HttpCode, HttpStatus, Post, Req, Res } from "@ne
 import {
     ApiBadRequestResponse,
     ApiCookieAuth,
-    ApiForbiddenResponse,
     ApiOkResponse,
     ApiOperation,
     ApiTags,
@@ -48,10 +47,6 @@ export class SessionController {
     })
     @ApiBadRequestResponse({
         description: "The request body is invalid.",
-        type: ErrorResponseDto,
-    })
-    @ApiForbiddenResponse({
-        description: "The signed-in user does not belong to any organization.",
         type: ErrorResponseDto,
     })
     login(@Req() request: Request, @Res({ passthrough: true }) response: Response, @Body() dto: LoginDto) {
@@ -194,10 +189,6 @@ export class SessionController {
     })
     @ApiUnauthorizedResponse({
         description: "A valid Better Auth session is required.",
-        type: ErrorResponseDto,
-    })
-    @ApiForbiddenResponse({
-        description: "The user is required to belong to an organization.",
         type: ErrorResponseDto,
     })
     getSession(@Session() session: BetterAuthSession): Promise<CustomSession> {

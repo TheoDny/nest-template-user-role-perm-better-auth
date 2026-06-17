@@ -1,4 +1,4 @@
-import { InvalidActiveOrganizationSelectionError, UserOrganizationRequiredError } from "@app/common/errors"
+import { InvalidActiveOrganizationSelectionError } from "@app/common/errors"
 import { PrismaService } from "@app/database/prisma.service"
 import { Injectable } from "@nestjs/common"
 import { AuthService } from "@thallesp/nestjs-better-auth"
@@ -35,7 +35,7 @@ export class AuthenticationService {
             returnHeaders: true,
         })
 
-        await this.ensureSignedInUserHasActiveOrganization(result.response.user.id, result.response.token)
+        await this.setFirstOrganizationAsActiveWhenAvailable(result.response.user.id, result.response.token)
         this.applySetCookieHeaders(response, result.headers)
 
         return result.response
@@ -101,7 +101,7 @@ export class AuthenticationService {
         return result.response
     }
 
-    private async ensureSignedInUserHasActiveOrganization(userId: string, sessionToken: string): Promise<void> {
+    private async setFirstOrganizationAsActiveWhenAvailable(userId: string, sessionToken: string): Promise<void> {
         const membership = await this.prisma.member.findFirst({
             where: {
                 userId,
@@ -115,7 +115,7 @@ export class AuthenticationService {
         })
 
         if (!membership) {
-            throw new UserOrganizationRequiredError()
+            return
         }
 
         await this.prisma.session.updateMany({

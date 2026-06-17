@@ -1,11 +1,10 @@
+import { PrismaService } from "@app/database/prisma.service"
 import { Injectable } from "@nestjs/common"
 import type { Prisma } from "@prisma/client"
 import type { UserSession } from "@thallesp/nestjs-better-auth"
-import { PrismaService } from "@app/database/prisma.service"
-import { UserOrganizationRequiredError } from "@app/common/errors"
-import { adminRole, memberRole, ownerRole, organizationStatements } from "../permissions"
 import type { AppAuth } from "../auth"
 import type { CorrectSession, CorrectUser, CustomSession } from "../auth.types"
+import { adminRole, memberRole, organizationStatements, ownerRole } from "../permissions"
 
 type BetterAuthSession = UserSession<AppAuth>
 type PermissionRecord = Record<string, readonly string[]>
@@ -38,6 +37,14 @@ export class SessionService {
     async findCurrentPermissions(session: BetterAuthSession): Promise<CurrentPermissionsContext> {
         const activeOrganizationId = await this.ensureActiveOrganization(session)
 
+        if (!activeOrganizationId) {
+            return {
+                permissions: [],
+                roles: [],
+                activeOrganizationId: null,
+            }
+        }
+
         const roles = await this.findActiveOrganizationRoles(session.user.id, activeOrganizationId)
 
         return {
@@ -47,7 +54,7 @@ export class SessionService {
         }
     }
 
-    private async ensureActiveOrganization(session: BetterAuthSession): Promise<string> {
+    private async ensureActiveOrganization(session: BetterAuthSession): Promise<string | null> {
         const activeOrganizationId = session.session.activeOrganizationId ?? null
 
         if (activeOrganizationId) {
@@ -67,7 +74,7 @@ export class SessionService {
         })
 
         if (!membership) {
-            throw new UserOrganizationRequiredError()
+            return null
         }
 
         await this.prisma.session.update({
@@ -161,6 +168,10 @@ export class SessionService {
     }
 
     private toPermissionRecord(value: Prisma.JsonValue): PermissionRecord {
+        if (typeof value === "string") {
+            value = JSON.parse(value)
+        }
+
         if (!value || typeof value !== "object" || Array.isArray(value)) {
             return {}
         }

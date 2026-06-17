@@ -92,6 +92,59 @@ describe("AuthenticationService", () => {
         })
     })
 
+    it("signs in without failing when the user has no organization", async () => {
+        const responseHeaders = buildHeaders(["better-auth.session_token=login-token; Path=/; HttpOnly"])
+        const signInEmail = jest.fn().mockResolvedValue({
+            headers: responseHeaders,
+            response: {
+                redirect: false,
+                token: "login-token",
+                user: {
+                    id: "user_1",
+                    email: "user@example.com",
+                },
+            },
+        })
+        const authService = {
+            api: {
+                signInEmail,
+            },
+        }
+        const append = jest.fn()
+        const response = buildResponse(append)
+        const prisma = buildPrisma({
+            organizationId: null,
+        })
+        const service = new AuthenticationService(authService as never, prisma.service)
+
+        await expect(
+            service.login(
+                {
+                    "user-agent": "jest",
+                },
+                response,
+                {
+                    email: "user@example.com",
+                    password: "password",
+                },
+            ),
+        ).resolves.toEqual({
+            redirect: false,
+            token: "login-token",
+            user: {
+                id: "user_1",
+                email: "user@example.com",
+            },
+        })
+
+        expect(append).toHaveBeenCalledWith(
+            "Set-Cookie",
+            "better-auth.session_token=login-token; Path=/; HttpOnly",
+        )
+        expect(prisma.memberFindFirst).toHaveBeenCalled()
+        expect(prisma.sessionUpdateMany).not.toHaveBeenCalled()
+    })
+
     it("signs out with Better Auth", async () => {
         const responseHeaders = buildHeaders(["better-auth.session_token=; Path=/; Max-Age=0"])
         const signOut = jest.fn().mockResolvedValue({
@@ -303,14 +356,13 @@ function buildResponse(append: jest.Mock): Response {
     } as unknown as Response
 }
 
-function buildPrisma(): {
+function buildPrisma(options: { organizationId?: string | null } = {}): {
     memberFindFirst: jest.Mock
     service: PrismaService
     sessionUpdateMany: jest.Mock
 } {
-    const memberFindFirst = jest.fn().mockResolvedValue({
-        organizationId: "org_1",
-    })
+    const organizationId = options.organizationId === undefined ? "org_1" : options.organizationId
+    const memberFindFirst = jest.fn().mockResolvedValue(organizationId ? { organizationId } : null)
     const sessionUpdateMany = jest.fn()
     const service = {
         member: {
