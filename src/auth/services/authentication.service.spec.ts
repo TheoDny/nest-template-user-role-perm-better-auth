@@ -1,4 +1,5 @@
 import type { Response } from "express"
+import type { PrismaService } from "@app/database/prisma.service"
 import { InvalidActiveOrganizationSelectionError } from "@app/common/errors"
 import { AuthenticationService } from "./authentication.service"
 
@@ -31,7 +32,8 @@ describe("AuthenticationService", () => {
         }
         const append = jest.fn()
         const response = buildResponse(append)
-        const service = new AuthenticationService(authService as never)
+        const prisma = buildPrisma()
+        const service = new AuthenticationService(authService as never, prisma.service)
 
         await expect(
             service.login(
@@ -68,9 +70,29 @@ describe("AuthenticationService", () => {
             "Set-Cookie",
             "better-auth.session_token=login-token; Path=/; HttpOnly",
         )
+        expect(prisma.memberFindFirst).toHaveBeenCalledWith({
+            where: {
+                userId: "user_1",
+            },
+            select: {
+                organizationId: true,
+            },
+            orderBy: {
+                createdAt: "asc",
+            },
+        })
+        expect(prisma.sessionUpdateMany).toHaveBeenCalledWith({
+            where: {
+                token: "login-token",
+                activeOrganizationId: null,
+            },
+            data: {
+                activeOrganizationId: "org_1",
+            },
+        })
     })
 
-    it("signs out with Better Auth and forwards cleanup cookies", async () => {
+    it("signs out with Better Auth", async () => {
         const responseHeaders = buildHeaders(["better-auth.session_token=; Path=/; Max-Age=0"])
         const signOut = jest.fn().mockResolvedValue({
             headers: responseHeaders,
@@ -83,17 +105,12 @@ describe("AuthenticationService", () => {
                 signOut,
             },
         }
-        const append = jest.fn()
-        const response = buildResponse(append)
-        const service = new AuthenticationService(authService as never)
+        const service = new AuthenticationService(authService as never, buildPrisma().service)
 
         await expect(
-            service.logout(
-                {
-                    cookie: "better-auth.session_token=login-token",
-                },
-                response,
-            ),
+            service.logout({
+                cookie: "better-auth.session_token=login-token",
+            }),
         ).resolves.toEqual({
             success: true,
         })
@@ -102,7 +119,6 @@ describe("AuthenticationService", () => {
             headers: expect.any(Headers),
             returnHeaders: true,
         })
-        expect(append).toHaveBeenCalledWith("Set-Cookie", "better-auth.session_token=; Path=/; Max-Age=0")
     })
 
     it("sends a sign-in email OTP with Better Auth", async () => {
@@ -114,7 +130,7 @@ describe("AuthenticationService", () => {
                 sendVerificationOTP,
             },
         }
-        const service = new AuthenticationService(authService as never)
+        const service = new AuthenticationService(authService as never, buildPrisma().service)
 
         await expect(
             service.sendEmailOtp({
@@ -152,7 +168,7 @@ describe("AuthenticationService", () => {
         }
         const append = jest.fn()
         const response = buildResponse(append)
-        const service = new AuthenticationService(authService as never)
+        const service = new AuthenticationService(authService as never, buildPrisma().service)
 
         await expect(
             service.signInEmailOtp(
@@ -195,7 +211,7 @@ describe("AuthenticationService", () => {
                 requestPasswordResetEmailOTP,
             },
         }
-        const service = new AuthenticationService(authService as never)
+        const service = new AuthenticationService(authService as never, buildPrisma().service)
 
         await expect(
             service.requestPasswordResetEmailOtp({
@@ -229,7 +245,7 @@ describe("AuthenticationService", () => {
         }
         const append = jest.fn()
         const response = buildResponse(append)
-        const service = new AuthenticationService(authService as never)
+        const service = new AuthenticationService(authService as never, buildPrisma().service)
 
         await expect(
             service.setActiveOrganization(
@@ -265,7 +281,7 @@ describe("AuthenticationService", () => {
                 setActiveOrganization,
             },
         }
-        const service = new AuthenticationService(authService as never)
+        const service = new AuthenticationService(authService as never, buildPrisma().service)
 
         await expect(service.setActiveOrganization({}, buildResponse(jest.fn()), {})).rejects.toBeInstanceOf(
             InvalidActiveOrganizationSelectionError,
@@ -285,4 +301,29 @@ function buildResponse(append: jest.Mock): Response {
     return {
         append,
     } as unknown as Response
+}
+
+function buildPrisma(): {
+    memberFindFirst: jest.Mock
+    service: PrismaService
+    sessionUpdateMany: jest.Mock
+} {
+    const memberFindFirst = jest.fn().mockResolvedValue({
+        organizationId: "org_1",
+    })
+    const sessionUpdateMany = jest.fn()
+    const service = {
+        member: {
+            findFirst: memberFindFirst,
+        },
+        session: {
+            updateMany: sessionUpdateMany,
+        },
+    } as unknown as PrismaService
+
+    return {
+        memberFindFirst,
+        service,
+        sessionUpdateMany,
+    }
 }
