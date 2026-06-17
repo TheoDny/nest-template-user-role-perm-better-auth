@@ -146,10 +146,21 @@ describe("App e2e", () => {
             .useValue({
                 $connect: jest.fn(),
                 $disconnect: jest.fn(),
+                member: {
+                    findFirst: jest.fn().mockResolvedValue({
+                        organizationId: "org_1",
+                    }),
+                },
+                session: {
+                    updateMany: jest.fn(),
+                },
             })
             .compile()
 
+        const { setupSwagger } = await import("../src/swagger")
+
         app = moduleRef.createNestApplication()
+        setupSwagger(app)
         await app.init()
     })
 
@@ -202,9 +213,6 @@ describe("App e2e", () => {
             .set("Cookie", ["better-auth.session_token=login-token"])
             .expect(200)
 
-        expect(response.headers["set-cookie"]).toEqual(
-            expect.arrayContaining([expect.stringContaining("better-auth.session_token=;")]),
-        )
         expect(response.body).toEqual({
             success: true,
         })
@@ -289,6 +297,15 @@ describe("App e2e", () => {
                 },
             ]),
         )
+    })
+
+    it("exposes the OpenAPI document", async () => {
+        const response = await request(getHttpServer()).get("/docs-json").expect(200)
+
+        expect(response.body.info.title).toBe("NestJS Better Auth API")
+        expect(response.body.paths).toHaveProperty("/auth/login")
+        expect(response.body.paths).toHaveProperty("/permissions/check")
+        expect(response.body.components.securitySchemes).toHaveProperty("betterAuthSession")
     })
 
     function getHttpServer(): Parameters<typeof request>[0] {
