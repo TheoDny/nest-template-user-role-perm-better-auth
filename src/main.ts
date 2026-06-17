@@ -1,8 +1,9 @@
-import "reflect-metadata"
 import { ValidationPipe } from "@nestjs/common"
 import { ConfigService } from "@nestjs/config"
 import { NestFactory } from "@nestjs/core"
+import "reflect-metadata"
 import { AppModule } from "./app.module"
+import { setupSwagger } from "./swagger"
 
 async function bootstrap(): Promise<void> {
     const app = await NestFactory.create(AppModule, {
@@ -20,6 +21,13 @@ async function bootstrap(): Promise<void> {
 
     const configService = app.get(ConfigService)
     const port = configService.getOrThrow<number>("PORT")
+
+    app.enableCors({
+        origin: configService.getOrThrow<string>("BETTER_AUTH_TRUSTED_ORIGINS"),
+        credentials: true,
+    })
+
+    setupSwagger(app)
 
     await app.listen(port)
 }
