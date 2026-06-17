@@ -1,6 +1,14 @@
 import { PermissionsService } from "./permissions.service"
 import type { SessionService } from "@app/auth/services/session.service"
 
+jest.mock("@thallesp/nestjs-better-auth", () => ({
+    AuthService: class AuthService {},
+}))
+
+jest.mock("better-auth/node", () => ({
+    fromNodeHeaders: jest.fn(() => new Headers()),
+}))
+
 jest.mock("@app/auth/permissions", () => ({
     organizationStatements: {
         organization: ["update", "delete"],

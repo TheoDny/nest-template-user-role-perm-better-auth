@@ -85,6 +85,8 @@ Session:
 ```http
 POST /auth/login
 POST /auth/logout
+GET /auth/sessions
+POST /auth/sessions/revoke
 POST /auth/email-otp/send
 POST /auth/email-otp/sign-in
 POST /auth/password-reset/email-otp
