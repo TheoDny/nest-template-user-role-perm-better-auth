@@ -21,6 +21,7 @@ import { BetterAuthSessionResponseDto } from "../dto/better-auth-session-respons
 import { CustomSessionResponseDto } from "../dto/custom-session-response.dto"
 import { LoginDto } from "../dto/login.dto"
 import { RequestPasswordResetEmailOtpDto } from "../dto/request-password-reset-email-otp.dto"
+import { ResetPasswordEmailOtpDto } from "../dto/reset-password-email-otp.dto"
 import { RevokeSessionDto } from "../dto/revoke-session.dto"
 import { SendEmailOtpDto } from "../dto/send-email-otp.dto"
 import { SetActiveOrganizationDto } from "../dto/set-active-organization.dto"
@@ -176,6 +177,24 @@ export class SessionController {
     })
     requestPasswordResetEmailOtp(@Body() dto: RequestPasswordResetEmailOtpDto) {
         return this.authenticationService.requestPasswordResetEmailOtp(dto)
+    }
+
+    @Post("email-otp/reset-password")
+    @AllowAnonymous()
+    @HttpCode(HttpStatus.OK)
+    @ApiOperation({
+        summary: "Reset a password with an email OTP",
+    })
+    @ApiOkResponse({
+        description: "The password was reset with the provided OTP.",
+        type: SuccessResponseDto,
+    })
+    @ApiBadRequestResponse({
+        description: "The OTP payload is invalid or rejected.",
+        type: ErrorResponseDto,
+    })
+    resetPasswordEmailOtp(@Body() dto: ResetPasswordEmailOtpDto) {
+        return this.authenticationService.resetPasswordEmailOtp(dto)
     }
 
     @Post("active-organization")

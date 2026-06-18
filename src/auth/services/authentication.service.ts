@@ -8,6 +8,7 @@ import type { IncomingHttpHeaders } from "node:http"
 import type { AppAuth } from "../auth"
 import type { LoginDto } from "../dto/login.dto"
 import type { RequestPasswordResetEmailOtpDto } from "../dto/request-password-reset-email-otp.dto"
+import type { ResetPasswordEmailOtpDto } from "../dto/reset-password-email-otp.dto"
 import type { SendEmailOtpDto } from "../dto/send-email-otp.dto"
 import type { SetActiveOrganizationDto } from "../dto/set-active-organization.dto"
 import type { SignInEmailOtpDto } from "../dto/sign-in-email-otp.dto"
@@ -80,6 +81,16 @@ export class AuthenticationService {
         return this.authService.api.requestPasswordResetEmailOTP({
             body: {
                 email: dto.email,
+            },
+        })
+    }
+
+    resetPasswordEmailOtp(dto: ResetPasswordEmailOtpDto) {
+        return this.authService.api.resetPasswordEmailOTP({
+            body: {
+                email: dto.email,
+                otp: dto.otp,
+                password: dto.password,
             },
         })
     }
