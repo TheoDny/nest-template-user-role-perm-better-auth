@@ -86,11 +86,10 @@ export class OrganizationInvitationsService {
         })
     }
 
-    async getPublic(organizationId: string, invitationId: string) {
+    async getOne(invitationId: string) {
         const invitation = await this.prisma.invitation.findFirst({
             where: {
                 id: invitationId,
-                organizationId,
             },
             include: {
                 organization: {
