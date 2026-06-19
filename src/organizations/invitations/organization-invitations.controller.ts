@@ -1,3 +1,6 @@
+import { auth } from "@app/auth/auth"
+import { ErrorResponseDto } from "@app/common/dto/error-response.dto"
+import { SuccessResponseDto } from "@app/common/dto/success-response.dto"
 import { Body, Controller, Get, Param, Patch, Post, Req } from "@nestjs/common"
 import {
     ApiBadRequestResponse,
@@ -12,11 +15,8 @@ import {
     ApiUnauthorizedResponse,
 } from "@nestjs/swagger"
 import type { UserSession } from "@thallesp/nestjs-better-auth"
-import { AllowAnonymous, MemberHasPermission, Session } from "@thallesp/nestjs-better-auth"
+import { MemberHasPermission, Session } from "@thallesp/nestjs-better-auth"
 import type { Request } from "express"
-import { auth } from "@app/auth/auth"
-import { ErrorResponseDto } from "@app/common/dto/error-response.dto"
-import { SuccessResponseDto } from "@app/common/dto/success-response.dto"
 import { CreateInvitationDto } from "./dto/create-invitation.dto"
 import { InvitationParamDto } from "./dto/invitation-param.dto"
 import { PublicInvitationParamDto } from "./dto/public-invitation-param.dto"
@@ -127,29 +127,29 @@ export class OrganizationInvitationsController {
         return this.organizationInvitationsService.list(request.headers, session.session.activeOrganizationId)
     }
 
-    @Get("organizations/:organizationId/invitations/:invitationId")
-    @AllowAnonymous()
+    @Get("invitations/:invitationId")
+    @ApiCookieAuth("betterAuthSession")
     @ApiOperation({
-        summary: "Get public invitation details",
-    })
-    @ApiParam({
-        name: "organizationId",
-        example: "org_1",
+        summary: "Get invitation details",
     })
     @ApiParam({
         name: "invitationId",
         example: "invitation_1",
     })
     @ApiOkResponse({
-        description: "Public invitation data safe for anonymous clients.",
+        description: "Invitation data",
         type: PublicInvitationResponseDto,
+    })
+    @ApiUnauthorizedResponse({
+        description: "A valid Better Auth session is required.",
+        type: ErrorResponseDto,
     })
     @ApiNotFoundResponse({
         description: "The invitation was not found.",
         type: ErrorResponseDto,
     })
-    getPublic(@Param() params: PublicInvitationParamDto) {
-        return this.organizationInvitationsService.getPublic(params.organizationId, params.invitationId)
+    getOne(@Param() params: PublicInvitationParamDto) {
+        return this.organizationInvitationsService.getOne(params.invitationId)
     }
 
     @Patch("invitations/:invitationId/roles")
