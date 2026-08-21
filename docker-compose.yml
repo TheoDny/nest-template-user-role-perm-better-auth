@@ -28,23 +28,21 @@ services:
     migrate:
         build:
             context: .
-            target: build
+            target: migration
         container_name: nestjs_better_auth_migrate
-        environment:
-            DATABASE_URL: ${DATABASE_URL}
-        command: ["pnpm", "exec", "prisma", "migrate", "deploy"]
-        depends_on:
-            postgres:
-                condition: service_healthy
         restart: "no"
+        environment:
+            NODE_ENV: production
+            DATABASE_URL: ${DATABASE_URL}
 
     api:
         build:
             context: .
+            target: production
         container_name: nestjs_better_auth_api
         restart: unless-stopped
         ports:
-            - "${PORT:-3000}:3000"
+            - "${PORT_HOST:-3000}:${PORT:-3000}"
         environment:
             NODE_ENV: production
             PORT: ${PORT:-3000}
@@ -62,10 +60,6 @@ services:
         depends_on:
             migrate:
                 condition: service_completed_successfully
-            postgres:
-                condition: service_healthy
-            mailpit:
-                condition: service_started
 
 volumes:
     postgres_data:

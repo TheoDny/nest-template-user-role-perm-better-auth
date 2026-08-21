@@ -1,49 +1,92 @@
-# syntax=docker/dockerfile:1
-
+# ============================================================
+# Base
+# ============================================================
 FROM node:22-alpine AS base
 
 ENV PNPM_HOME="/pnpm"
-ENV PATH="${PNPM_HOME}:${PATH}"
+ENV PATH="$PNPM_HOME:$PATH"
 
-RUN corepack enable && corepack prepare pnpm@11.5.2 --activate
+RUN corepack enable \
+    && corepack prepare pnpm@11 --activate
 
 WORKDIR /app
 
+
+# ============================================================
+# Dependencies
+# ============================================================
 FROM base AS deps
 
-COPY package.json pnpm-lock.yaml ./
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 
 RUN pnpm install --frozen-lockfile
 
+
+# ============================================================
+# Build
+# ============================================================
 FROM base AS build
 
 COPY --from=deps /app/node_modules ./node_modules
-COPY . .
 
-# Prisma reads DATABASE_URL from prisma.config.ts during client generation.
-ENV DATABASE_URL=${DATABASE_URL}
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY prisma ./prisma
+COPY prisma.config.ts ./
+COPY tsconfig*.json ./
+COPY nest-cli.json ./
+COPY src ./src
 
-RUN pnpm prisma:generate
+ENV DATABASE_URL="postgresql://app:app@postgres:5432/app?schema=public"
+
+RUN pnpm prisma generate
 RUN pnpm build
-RUN pnpm prune --prod
 
+
+# ============================================================
+# Production dependencies
+# ============================================================
+FROM base AS prod-deps
+
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+
+RUN pnpm install --frozen-lockfile --prod
+
+
+# ============================================================
+# API PRODUCTION
+# ============================================================
 FROM node:22-alpine AS production
 
-ENV NODE_ENV=${NODE_ENV:-production}
-ENV PORT=${PORT}
+ENV NODE_ENV=production
 
 WORKDIR /app
 
-RUN addgroup -S app && adduser -S app -G app
+RUN addgroup -S app \
+    && adduser -S app -G app
 
-COPY --from=build /app/node_modules ./node_modules
+COPY --from=prod-deps /app/node_modules ./node_modules
 COPY --from=build /app/dist ./dist
 COPY --from=build /app/package.json ./package.json
-COPY --from=build /app/prisma ./prisma
-COPY --from=build /app/prisma.config.ts ./prisma.config.ts
 
 USER app
 
-EXPOSE ${PORT}
+EXPOSE 3000
 
 CMD ["node", "dist/main.js"]
+
+
+# ============================================================
+# MIGRATION JOB
+# ============================================================
+FROM base AS migration
+
+COPY --from=deps /app/node_modules ./node_modules
+
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY prisma ./prisma
+COPY prisma.config.ts ./
+COPY docker-entrypoint.sh ./docker-entrypoint.sh
+
+RUN chmod +x ./docker-entrypoint.sh
+
+CMD ["./docker-entrypoint.sh"]
