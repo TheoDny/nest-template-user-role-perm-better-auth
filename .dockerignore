@@ -1,0 +1,17 @@
+node_modules
+dist
+coverage
+.git
+.github
+.env
+.env.*
+!.env.example
+work
+outputs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+test
+.vscode
+.idea
+.agents
