@@ -7,7 +7,7 @@ ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
 
 RUN corepack enable \
-    && corepack prepare pnpm@11 --activate
+    && corepack prepare pnpm --activate
 
 WORKDIR /app
 
@@ -85,7 +85,11 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY prisma ./prisma
 COPY prisma.config.ts ./
+COPY src/database/prisma-client.factory.ts ./src/database/prisma-client.factory.ts
 COPY docker-entrypoint.sh ./docker-entrypoint.sh
+
+ENV DATABASE_URL="postgresql://app:app@postgres:5432/app?schema=public"
+RUN pnpm prisma generate
 
 RUN chmod +x ./docker-entrypoint.sh
 

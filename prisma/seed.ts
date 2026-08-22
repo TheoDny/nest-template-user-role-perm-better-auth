@@ -1,4 +1,4 @@
-import { createPrismaClient } from "@app/database/prisma-client.factory"
+import { createPrismaClient } from "../src/database/prisma-client.factory"
 
 const prisma = createPrismaClient()
 
@@ -144,11 +144,10 @@ async function main(): Promise<void> {
 }
 
 main()
-    .then(async () => {
-        await prisma.$disconnect()
-    })
-    .catch(async (error: unknown) => {
+    .catch((error: unknown) => {
         console.error(error)
-        await prisma.$disconnect()
         process.exit(1)
+    })
+    .finally(async () => {
+        await prisma.$disconnect()
     })

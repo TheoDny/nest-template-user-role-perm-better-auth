@@ -20,9 +20,6 @@
         "prisma:seed": "prisma db seed",
         "prisma:studio": "prisma studio"
     },
-    "prisma": {
-        "seed": "ts-node -r tsconfig-paths/register prisma/seed.ts"
-    },
     "dependencies": {
         "@nestjs/common": "^11.0.0",
         "@nestjs/config": "^4.0.0",
@@ -64,6 +61,7 @@
         "ts-loader": "^9.5.1",
         "ts-node": "^10.9.2",
         "tsconfig-paths": "^4.2.0",
+        "tsx": "^4.23.12",
         "typescript": "^5.7.0",
         "typescript-eslint": "^8.0.0"
     },
