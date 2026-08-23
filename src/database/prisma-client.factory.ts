@@ -1,6 +1,6 @@
-import "dotenv/config"
 import { PrismaPg } from "@prisma/adapter-pg"
-import { PrismaClient } from "@prisma/client"
+import "dotenv/config"
+import { PrismaClient } from "../../prisma/generated/client"
 
 export function createPrismaClient(): PrismaClient {
     return new PrismaClient({

@@ -66,6 +66,7 @@ RUN addgroup -S app \
 
 COPY --from=prod-deps /app/node_modules ./node_modules
 COPY --from=build /app/dist ./dist
+COPY --from=build /app/prisma/generated ./dist/prisma/generated
 COPY --from=build /app/package.json ./package.json
 
 USER app
