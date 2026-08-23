@@ -66,10 +66,10 @@ services:
                     "-e",
                     "fetch('http://127.0.0.1:' + (process.env.PORT || 3000) + '/status').then((response) => process.exit(response.ok ? 0 : 1)).catch(() => process.exit(1))",
                 ]
-        interval: 1m
-        timeout: 10s
-        retries: 3
-        start_period: 30s
+            interval: 1m
+            timeout: 10s
+            retries: 3
+            start_period: 30s
         depends_on:
             migrate:
                 condition: service_completed_successfully
