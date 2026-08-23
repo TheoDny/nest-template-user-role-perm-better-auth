@@ -10,7 +10,7 @@ services:
         volumes:
             - postgres_data:/var/lib/postgresql/data
         healthcheck:
-            test: ["CMD-SHELL", "pg_isready -U app -d app"]
+            test: ["CMD-SHELL", "pg_isready -U nest_urp -d nest_urp"]
             interval: 1m
             timeout: 10s
             retries: 5
@@ -58,6 +58,18 @@ services:
             SMTP_USER: ${SMTP_USER}
             SMTP_PASSWORD: ${SMTP_PASSWORD}
             SMTP_FROM: ${SMTP_FROM}
+        healthcheck:
+            test:
+                [
+                    "CMD",
+                    "node",
+                    "-e",
+                    "fetch('http://127.0.0.1:' + (process.env.PORT || 3000) + '/status').then((response) => process.exit(response.ok ? 0 : 1)).catch(() => process.exit(1))",
+                ]
+        interval: 1m
+        timeout: 10s
+        retries: 3
+        start_period: 30s
         depends_on:
             migrate:
                 condition: service_completed_successfully
