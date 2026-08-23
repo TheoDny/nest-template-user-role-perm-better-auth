@@ -1,3 +1,4 @@
+import { hashPassword } from "better-auth/crypto"
 import { createPrismaClient } from "../src/database/prisma-client.factory"
 
 const prisma = createPrismaClient()
@@ -65,6 +66,7 @@ async function main(): Promise<void> {
 
     for (const user of seedUsers) {
         console.log(`Seeding user: ${user.email}`)
+        const password = await hashPassword(process.env.ADMIN_PASSWORD ?? "")
         const seededUser = await prisma.user.upsert({
             where: {
                 email: user.email,
@@ -72,11 +74,13 @@ async function main(): Promise<void> {
             update: {
                 name: user.name,
                 emailVerified: true,
+                password,
             },
             create: {
                 name: user.name,
                 email: user.email,
                 emailVerified: true,
+                password,
             },
             select: {
                 id: true,
