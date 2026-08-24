@@ -23,7 +23,7 @@ async function bootstrap(): Promise<void> {
     const port = configService.getOrThrow<number>("PORT")
 
     app.enableCors({
-        origin: configService.getOrThrow<string>("BETTER_AUTH_TRUSTED_ORIGINS"),
+        origin: configService.getOrThrow<string>("BETTER_AUTH_TRUSTED_ORIGINS").split(","),
         credentials: true,
     })
 
