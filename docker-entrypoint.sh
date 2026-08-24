@@ -38,7 +38,7 @@ echo "========================================"
 
 run_with_retry \
     "MIGRATION" \
-    pnpm prisma migrate deploy
+    bunx prisma migrate deploy
 
 echo ""
 echo "========================================"
@@ -47,7 +47,7 @@ echo "========================================"
 
 run_with_retry \
     "SEED" \
-    pnpm prisma db seed
+    bun run prisma:seed
 
 echo ""
 echo "========================================"

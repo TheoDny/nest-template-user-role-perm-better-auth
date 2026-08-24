@@ -6,7 +6,7 @@ The project is a NestJS API template built around Better Auth, organization-scop
 
 ## Core Rules
 
-- Use `pnpm` for all package operations.
+- Use `bun` for all package operations.
 - Keep code, comments, branch names, and commit messages in English.
 - Follow the existing NestJS module/controller/service/DTO structure.
 - Prefer Better Auth APIs whenever Better Auth exposes the required behavior.
@@ -18,8 +18,8 @@ The project is a NestJS API template built around Better Auth, organization-scop
 
 ## Technology Stack
 
-- Runtime: Node.js 22+
-- Package manager: pnpm
+- Runtime: Bun 1.2+
+- Package manager: Bun
 - Framework: NestJS
 - Auth: Better Auth
 - Nest auth integration: `@thallesp/nestjs-better-auth`
@@ -34,16 +34,16 @@ The project is a NestJS API template built around Better Auth, organization-scop
 ## Local Commands
 
 ```bash
-pnpm install
-pnpm prisma:generate
-pnpm prisma:migrate
-pnpm prisma:seed
-pnpm build
-pnpm lint
-pnpm test
-pnpm test:e2e
-pnpm format
-pnpm start:dev
+bun install
+bun prisma:generate
+bun prisma:migrate
+bun prisma:seed
+bun build
+bun lint
+bun test
+bun test:e2e
+bun format
+bun start:dev
 ```
 
 Local infrastructure:
@@ -1008,7 +1008,7 @@ Rules:
 - All model IDs use `String @id @default(cuid())`.
 - Keep Better Auth table names mapped with `@@map(...)`.
 - Use direct Prisma writes to Better Auth-owned tables only when Better Auth lacks the required API.
-- After moving the project or reinstalling dependencies, run `pnpm prisma:generate`.
+- After moving the project or reinstalling dependencies, run `bun prisma:generate`.
 
 Important models:
 
@@ -1106,8 +1106,8 @@ E2E smoke tests currently cover:
 Run:
 
 ```bash
-pnpm test
-pnpm test:e2e
+bun test
+bun test:e2e
 ```
 
 When adding new behavior:
@@ -1123,8 +1123,8 @@ The repository uses the required `.prettierrc` at the root.
 Run:
 
 ```bash
-pnpm format
-pnpm lint
+bun format
+bun lint
 ```
 
 Do not introduce a second formatter config.
@@ -1137,7 +1137,7 @@ Do not introduce a second formatter config.
 - Do not use Prisma direct writes when a Better Auth API exists.
 - Do not delete the `owner` role or allow removing the last owner.
 - Do not expose full invitation internals on the public invitation lookup route.
-- Do not assume `node_modules` remains valid after moving the project across drives; run `pnpm install` and `pnpm prisma:generate`.
+- Do not assume `node_modules` remains valid after moving the project across drives; run `bun install` and `bun prisma:generate`.
 
 ## Suggested Workflow For Future Agents
 
@@ -1145,25 +1145,25 @@ Before editing:
 
 ```bash
 git status --short --branch
-pnpm build
-pnpm test
+bun build
+bun test
 ```
 
 After editing:
 
 ```bash
-pnpm format
-pnpm build
-pnpm lint
-pnpm test
-pnpm test:e2e
+bun format
+bun build
+bun lint
+bun test
+bun test:e2e
 ```
 
 For Prisma changes:
 
 ```bash
-pnpm prisma:generate
-pnpm exec prisma validate
+bun prisma:generate
+bunx prisma validate
 ```
 
 Before final response:

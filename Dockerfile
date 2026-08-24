@@ -1,13 +1,7 @@
 # ============================================================
 # Base
 # ============================================================
-FROM node:22-alpine AS base
-
-ENV PNPM_HOME="/pnpm"
-ENV PATH="$PNPM_HOME:$PATH"
-
-RUN corepack enable \
-    && corepack prepare pnpm --activate
+FROM oven/bun:1-alpine AS base
 
 WORKDIR /app
 
@@ -17,9 +11,9 @@ WORKDIR /app
 # ============================================================
 FROM base AS deps
 
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY package.json bun.lock ./
 
-RUN pnpm install --frozen-lockfile
+RUN bun install --frozen-lockfile
 
 
 # ============================================================
@@ -29,7 +23,7 @@ FROM base AS build
 
 COPY --from=deps /app/node_modules ./node_modules
 
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY package.json bun.lock ./
 COPY prisma ./prisma
 COPY prisma.config.ts ./
 COPY tsconfig*.json ./
@@ -38,8 +32,8 @@ COPY src ./src
 
 ENV DATABASE_URL="postgresql://app:app@postgres:5432/app?schema=public"
 
-RUN pnpm prisma generate
-RUN pnpm build
+RUN bun run prisma:generate
+RUN bun run build
 
 
 # ============================================================
@@ -47,15 +41,15 @@ RUN pnpm build
 # ============================================================
 FROM base AS prod-deps
 
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY package.json bun.lock ./
 
-RUN pnpm install --frozen-lockfile --prod
+RUN bun install --frozen-lockfile --production
 
 
 # ============================================================
 # API PRODUCTION
 # ============================================================
-FROM node:22-alpine AS production
+FROM oven/bun:1-alpine AS production
 
 ENV NODE_ENV=production
 
@@ -73,7 +67,7 @@ USER app
 
 EXPOSE 3000
 
-CMD ["node", "dist/src/main.js"]
+CMD ["bun", "dist/src/main.js"]
 
 
 # ============================================================
@@ -83,14 +77,14 @@ FROM base AS migration
 
 COPY --from=deps /app/node_modules ./node_modules
 
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY package.json bun.lock ./
 COPY prisma ./prisma
 COPY prisma.config.ts ./
 COPY src/database/prisma-client.factory.ts ./src/database/prisma-client.factory.ts
 COPY docker-entrypoint.sh ./docker-entrypoint.sh
 
 ENV DATABASE_URL="postgresql://app:app@postgres:5432/app?schema=public"
-RUN pnpm prisma generate
+RUN bun run prisma:generate
 
 RUN chmod +x ./docker-entrypoint.sh
 

@@ -1,23 +1,22 @@
 # NestJS Better Auth API
 
-Production-oriented NestJS API using Better Auth, Prisma, PostgreSQL, organization access control, MJML emails, and pnpm.
+Production-oriented NestJS API using Better Auth, Prisma, PostgreSQL, organization access control, MJML emails, and Bun.
 
 ## Requirements
 
-- Node.js 22+
-- pnpm 11+
+- Bun 1.2+
 - Docker
 
 ## Setup
 
 ```bash
-pnpm install
+bun install
 cp .env.example .env
 docker compose up -d
-pnpm prisma:generate
-pnpm prisma:migrate
-pnpm prisma:seed
-pnpm start:dev
+bun prisma:generate
+bun prisma:migrate
+bun prisma:seed
+bun start:dev
 ```
 
 Mailpit is available at `http://localhost:8025`.
@@ -29,7 +28,7 @@ Swagger UI is available at `http://localhost:3000/docs`.
 Run the database seed after migrations:
 
 ```bash
-pnpm prisma:seed
+bun prisma:seed
 ```
 
 The seed is idempotent and creates:
@@ -134,15 +133,15 @@ POST /invitations/:invitationId/reject
 ## Commands
 
 ```bash
-pnpm build
-pnpm lint
-pnpm test
-pnpm test:e2e
-pnpm format
-pnpm prisma:generate
-pnpm prisma:migrate
-pnpm prisma:seed
-pnpm prisma:studio
+bun build
+bun lint
+bun test
+bun test:e2e
+bun format
+bun prisma:generate
+bun prisma:migrate
+bun prisma:seed
+bun prisma:studio
 ```
 
 ## Prisma 7

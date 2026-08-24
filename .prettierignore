@@ -3,5 +3,5 @@ dist/
 coverage/
 work/
 outputs/
-pnpm-lock.yaml
+bun.lock
 
